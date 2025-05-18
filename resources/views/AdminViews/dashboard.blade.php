@@ -1,5 +1,29 @@
 <div x-data="dashboard()" class="p-6">
     <!-- Time Period Filter -->
+
+    @if (session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg flex justify-between items-center" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+            <p>{{ session('success') }}</p>
+            <button type="button" @click="show = false" class="text-green-700 hover:text-green-900">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    @endif
+
+    {{-- Error Notification --}}
+    @if (session('error'))
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex justify-between items-center" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+            <p>{{ session('error') }}</p>
+            <button type="button" @click="show = false" class="text-red-700 hover:text-red-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    @endif
+
     <div class="mb-6 flex justify-between items-center">
         <h1 class="text-2xl font-bold">Dashboard</h1>
         <select x-model="selectedPeriod" @change="filterByPeriod()"

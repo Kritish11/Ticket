@@ -70,7 +70,7 @@
                     <label class="block font-semibold mb-1">Interior & Exterior Images (6 PNGs minimum)</label>
                     <div>
                         <template x-if="images.length < 6">
-                            <label :class="{{ images.length ? 'w-24 h-24 p-2' : 'w-full p-4'}} flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition mb-2">
+                            <label :class="images.length ? 'w-24 h-24 p-2' : 'w-full p-4' + ' flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition mb-2'">
                                 <span class="text-gray-600 mb-2">
                                     <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
