@@ -13,8 +13,7 @@ class BusFeatureController extends Controller
     {
         $features = BusFeature::all();
         return response()->json([
-            'features' => $features,
-            'standards' => []
+            'features' => $features
         ]);
     }
 

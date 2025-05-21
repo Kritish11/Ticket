@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminControllers\BusController;
 use App\Http\Controllers\AdminControllers\BusRouteController;
 use App\Http\Controllers\AdminControllers\BusFeatureController;
 use App\Http\Controllers\AdminControllers\BusStandardController;
@@ -97,3 +98,17 @@ Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.get');
 Route::post('/blog/add', [BlogController::class, 'store'])->name('blog.save');
 Route::post('/blog/{id}', [BlogController::class, 'update'])->name('blog.update');
 Route::delete('/blog/{id}', [BlogController::class, 'destroy'])->name('blog.delete');
+
+//buses
+// Route::get('/buses/{bus}/edit', [BusController::class, 'getBusDetails'])->name('buses.edit');
+
+Route::prefix('admin')->group(function () {
+    Route::get('/buses', [BusController::class, 'index'])->name('admin.buses');
+    Route::get('/buses/create', [BusController::class, 'create'])->name('admin.buses.create');
+    Route::post('/buses', [BusController::class, 'store'])->name('admin.buses.store');
+    Route::get('/buses/{bus}/edit', [BusController::class, 'edit'])->name('admin.buses.edit');
+    Route::put('/buses/{bus}', [BusController::class, 'update'])->name('admin.buses.update');
+    Route::delete('/buses/{bus}', [BusController::class, 'destroy'])->name('admin.buses.destroy');
+    Route::get('/bus-standards', [BusStandardController::class, 'getStandards']);
+    Route::get('/bus-features', [BusFeatureController::class, 'getFeatures']);
+});

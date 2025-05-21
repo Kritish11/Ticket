@@ -27,7 +27,11 @@
                 @include('AdminViews.dashboard')
             </div>
             <div x-show="activeSection === 'buses'">
-                @include('AdminViews.buses')
+                @php
+                    $buses = \App\Models\Bus::with(['standard'])->get();
+                    $features = \App\Models\BusFeature::all();
+                @endphp
+                @include('AdminViews.buses', ['buses' => $buses, 'features' => $features])
             </div>
             <div x-show="activeSection === 'routes'">
                 @include('AdminViews.routes', ['routes' => $routes ?? collect([])])

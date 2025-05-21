@@ -12,16 +12,15 @@ return new class extends Migration
     {
         Schema::create('buses', function (Blueprint $table) {
             $table->id();
-            $table->string('bus_name');
-            $table->foreignIdFor(BusStandard::class)->constrained()->onDelete('cascade');
-            $table->string('bus_number')->unique();
+            $table->string('name');
+            $table->foreignId('standard_id')->constrained('bus_standards')->onDelete('cascade');  // Changed from bus_standard_id
+            $table->string('number_plate')->unique();
+            $table->integer('seats');
             $table->string('driver_name');
-            $table->string('driver_phone');
             $table->string('driver_license');
-            $table->string('co_driver_name');
-            $table->string('vehicle_bluebook');
-            $table->json('vehicle_images');
-            $table->integer('vehicle_seats');
+            $table->string('driver_bill_book');
+            $table->json('images');
+            $table->json('features');
             $table->timestamps();
         });
     }
