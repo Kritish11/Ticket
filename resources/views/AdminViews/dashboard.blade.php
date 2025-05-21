@@ -1,4 +1,4 @@
-<div x-data="dashboard()" class="p-6">
+<div x-data="dashboard()" class="p-6" x-init="init()">
     <!-- Time Period Filter -->
 
     @if (session('success'))
@@ -115,7 +115,11 @@
                         <div class="flex items-center justify-between p-4 border rounded-lg">
                             <div>
                                 <div class="font-medium" x-text="trip.route"></div>
-                                <div class="text-sm text-gray-500" x-text="trip.datetime"></div>
+                                <div class="text-sm text-gray-500">
+                                    <span x-text="trip.departureDate"></span> at 
+                                    <span x-text="trip.departureTime"></span>
+                                </div>
+                                <div class="text-xs text-gray-400" x-text="trip.busName"></div>
                             </div>
                             <div class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">On Time</div>
                         </div>
@@ -123,11 +127,43 @@
                 </div>
 
                 <div x-show="activeTab === 'Delayed'" class="space-y-4">
-                    <!-- Similar structure for delayed trips -->
+                    <template x-for="trip in delayedTrips" :key="trip.id">
+                        <div class="flex items-center justify-between p-4 border rounded-lg">
+                            <div>
+                                <div class="font-medium" x-text="trip.route"></div>
+                                <div class="text-sm text-gray-500">
+                                    <span x-text="trip.departureDate"></span> at 
+                                    <span x-text="trip.departureTime"></span>
+                                </div>
+                                <div class="text-xs text-gray-400" x-text="trip.busName"></div>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <div class="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">
+                                    Delayed by <span x-text="trip.delay"></span> min
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1" x-text="trip.reason"></div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
 
                 <div x-show="activeTab === 'Cancelled'" class="space-y-4">
-                    <!-- Similar structure for cancelled trips -->
+                    <template x-for="trip in cancelledTrips" :key="trip.id">
+                        <div class="flex items-center justify-between p-4 border rounded-lg">
+                            <div>
+                                <div class="font-medium" x-text="trip.route"></div>
+                                <div class="text-sm text-gray-500">
+                                    <span x-text="trip.departureDate"></span> at 
+                                    <span x-text="trip.departureTime"></span>
+                                </div>
+                                <div class="text-xs text-gray-400" x-text="trip.busName"></div>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <div class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full">Cancelled</div>
+                                <div class="text-xs text-gray-500 mt-1" x-text="trip.reason"></div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -228,11 +264,38 @@ function dashboard() {
     return {
         selectedPeriod: 'last30',
         activeTab: 'Upcoming',
-        upcomingTrips: [
-            { id: 1, route: 'Kathmandu → Pokhara', datetime: 'Today, 10:00 AM', status: 'On Time' },
-            { id: 2, route: 'Kathmandu → Chitwan', datetime: 'Today, 11:30 AM', status: 'On Time' },
-            { id: 3, route: 'Pokhara → Kathmandu', datetime: 'Today, 2:00 PM', status: 'On Time' }
-        ],
+        schedules: [],
+        
+        async init() {
+            await this.fetchSchedules();
+            // Auto refresh every 5 minutes
+            setInterval(() => this.fetchSchedules(), 300000);
+        },
+
+        async fetchSchedules() {
+            try {
+                const response = await fetch('/admin/schedules');
+                const data = await response.json();
+                if (data.success) {
+                    this.schedules = data.schedules;
+                }
+            } catch (error) {
+                console.error('Error fetching schedules:', error);
+            }
+        },
+
+        get upcomingTrips() {
+            return this.schedules.filter(s => s.status === 'upcoming');
+        },
+
+        get delayedTrips() {
+            return this.schedules.filter(s => s.status === 'delayed');
+        },
+
+        get cancelledTrips() {
+            return this.schedules.filter(s => s.status === 'cancelled');
+        },
+
         recentBookings: [
             { id: 1, name: 'John Doe', ticketId: 'TK-001', status: 'Confirmed' },
             { id: 2, name: 'Jane Smith', ticketId: 'TK-002', status: 'Pending' },

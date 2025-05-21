@@ -188,7 +188,7 @@
                 <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
 
-            <form @submit.prevent="updateForm" class="space-y-4">
+            <form @submit.prevent="editingSchedule ? updateForm() : saveSchedule()" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Route Selection -->
                     <div>
@@ -282,7 +282,7 @@
 
                 <div class="flex justify-end gap-2">
                     <button type="button" @click="showModal = false" class="px-4 py-2 border rounded">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-black text-white rounded">Save Schedule</button>
+                    <button type="submit" class="px-4 py-2 bg-black text-white rounded" x-text="editingSchedule ? 'Update Schedule' : 'Add Schedule'"></button>
                 </div>
             </form>
         </div>
@@ -312,15 +312,19 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-2">Reason (optional)</label>
-                    <textarea x-model="statusForm.reason" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                    <label class="block text-sm font-medium mb-2">
+                        Reason <span class="text-gray-500">(optional)</span>
+                    </label>
+                    <textarea 
+                        x-model="statusForm.reason" 
+                        rows="3" 
+                        class="w-full border rounded px-3 py-2"
+                        placeholder="Enter reason (optional)"></textarea>
                 </div>
 
                 <div class="flex justify-end gap-2">
-                    <button type="button" @click="showStatusModal = false"
-                        class="px-4 py-2 border rounded">Cancel</button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-black text-white rounded">Update Status</button>
+                    <button type="button" @click="showStatusModal = false" class="px-4 py-2 border rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-black text-white rounded">Update Status</button>
                 </div>
             </form>
         </div>
@@ -506,6 +510,43 @@ function scheduleManager() {
                 alert('Failed to update schedule');
             }
         },
+        saveSchedule() {
+            const formData = {
+                route_id: this.scheduleForm.routeId,
+                bus_id: this.scheduleForm.busId,
+                departure_date: this.scheduleForm.departureDate,
+                departure_time: this.scheduleForm.departureTime,
+                duration: this.scheduleForm.duration,
+                price: this.scheduleForm.price,
+                boarding_point: this.scheduleForm.boardingPoint,
+                food_break: this.scheduleForm.foodBreak
+            };
+
+            fetch('/admin/schedules', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.showModal = false;
+                    this.resetForm();
+                    this.loadAllData(); // Refresh the schedules
+                    alert('Schedule created successfully');
+                } else {
+                    alert(data.message || 'Failed to create schedule');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create schedule');
+            });
+        },
         resetForm() {
             this.scheduleForm = {
                 routeId: '',
@@ -538,11 +579,8 @@ function scheduleManager() {
                 const statusData = {
                     status: this.statusForm.status,
                     delay_minutes: this.statusForm.status === 'delayed' ? this.statusForm.delay : 0,
-                    status_reason: this.statusForm.reason
+                    status_reason: this.statusForm.reason || null // Allow null for empty reason
                 };
-
-                // Debug log
-                console.log('Status update payload:', statusData);
 
                 fetch(`/admin/schedules/${this.selectedSchedule.id}/status`, {
                     method: 'PUT',
@@ -556,7 +594,6 @@ function scheduleManager() {
                 .then(response => response.json())
                 .then(async data => {
                     if (data.success) {
-                        // Refresh all data to ensure consistency
                         await this.loadAllData();
                         this.showStatusModal = false;
                         this.selectedSchedule = null;

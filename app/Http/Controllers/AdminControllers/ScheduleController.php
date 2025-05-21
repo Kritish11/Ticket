@@ -139,12 +139,17 @@ class ScheduleController extends Controller
         try {
             $validated = $request->validate([
                 'status' => 'required|in:upcoming,delayed,cancelled',
-                'delay_minutes' => 'required_if:status,delayed|integer|min:0',
-                'status_reason' => 'nullable|string'
+                'delay_minutes' => 'required_if:status,delayed|nullable|integer|min:0',
+                'status_reason' => 'nullable|string' // Made reason optional for all statuses
             ]);
 
-            $schedule->update($validated);
+            // Set delay_minutes to 0 for non-delayed status
+            if ($validated['status'] !== 'delayed') {
+                $validated['delay_minutes'] = 0;
+            }
 
+            $schedule->update($validated);
+            
             // Load relationships and format response
             $schedule->load(['route', 'bus.standard']);
             $formattedSchedule = [
@@ -174,7 +179,7 @@ class ScheduleController extends Controller
             Log::error('Status update failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating status'
+                'message' => 'Error updating status: ' . $e->getMessage()
             ], 500);
         }
     }
