@@ -227,15 +227,13 @@
 
 <script>
 function routesManager() {
-    const routes = @json($routes ?? []);
-
     return {
         showModal: false,
         searchTerm: '',
         filterStatus: '',
         editingRoute: null,
+        routes: [],
         debug: true, // Enable debug output
-        routes: routes,
         routeForm: {
             from: '',
             to: '',
@@ -252,6 +250,19 @@ function routesManager() {
         deleteModal: {
             show: false,
             routeId: null
+        },
+        async init() {
+            try {
+                const response = await fetch('/admin/routes');
+                const data = await response.json();
+                if (data.success) {
+                    this.routes = data.routes;
+                } else {
+                    console.error('Failed to fetch routes:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching routes:', error);
+            }
         },
         get filteredRoutes() {
             console.log('Filtering routes:', this.routes); // Debug log

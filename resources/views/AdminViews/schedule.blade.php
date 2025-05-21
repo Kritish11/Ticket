@@ -1,4 +1,4 @@
-<div x-data="scheduleManager()" class="p-6">
+<div x-data="scheduleManager()" x-init="init()" class="p-6">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Schedule Management</h1>
@@ -139,6 +139,9 @@
                                         <span x-text="' (' + schedule.delay + ' min)'"></span>
                                     </template>
                                 </span>
+                                <template x-if="schedule.reason">
+                                    <span class="text-xs text-gray-500" x-text="schedule.reason"></span>
+                                </template>
                             </div>
                         </td>
                         <td class="px-6 py-4">
@@ -185,7 +188,7 @@
                 <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
 
-            <form @submit.prevent="saveSchedule" class="space-y-4">
+            <form @submit.prevent="updateForm" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Route Selection -->
                     <div>
@@ -241,50 +244,34 @@
                 <!-- Food Break Details -->
                 <div class="space-y-4 border-t pt-4">
                     <div class="flex justify-between items-center">
-                        <label class="block text-sm font-medium">Food Breaks</label>
-                        <button type="button"
-                            @click="addFoodBreak()"
-                            class="text-sm px-3 py-1 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
-                            <span class="text-lg">+</span> Add Break
-                        </button>
+                        <label class="block text-sm font-medium">Food Break</label>
                     </div>
 
-                    <template x-for="(break, index) in scheduleForm.foodBreaks" :key="index">
-                        <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Location</label>
-                                <input type="text"
-                                    x-model="break.location"
-                                    class="w-full border rounded px-3 py-2"
-                                    placeholder="Break location"
-                                    required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Time</label>
-                                <input type="time"
-                                    x-model="break.time"
-                                    class="w-full border rounded px-3 py-2"
-                                    required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Duration (minutes)</label>
-                                <div class="flex gap-2">
-                                    <input type="number"
-                                        x-model="break.duration"
-                                        class="w-full border rounded px-3 py-2"
-                                        min="1"
-                                        required>
-                                    <button type="button"
-                                        @click="removeFoodBreak(index)"
-                                        class="px-2 py-2 text-red-600 hover:bg-red-50 rounded">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Location</label>
+                            <input type="text"
+                                x-model="scheduleForm.foodBreak.location"
+                                class="w-full border rounded px-3 py-2"
+                                placeholder="Break location"
+                                required>
                         </div>
-                    </template>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Time</label>
+                            <input type="time"
+                                x-model="scheduleForm.foodBreak.time"
+                                class="w-full border rounded px-3 py-2"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Duration (minutes)</label>
+                            <input type="number"
+                                x-model="scheduleForm.foodBreak.duration"
+                                class="w-full border rounded px-3 py-2"
+                                min="1"
+                                required>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Boarding Points -->
@@ -379,38 +366,65 @@ function scheduleManager() {
             duration: '',
             price: '',
             boardingPoint: '',
-            foodBreaks: []
+            foodBreak: {
+                location: '',
+                time: '',
+                duration: 30
+            }
         },
         statusForm: {
             status: 'upcoming',
             delay: 0,
             reason: ''
         },
-        routes: [
-            { id: 1, from: 'Kathmandu', to: 'Pokhara' },
-            { id: 2, from: 'Kathmandu', to: 'Chitwan' }
-        ],
-        buses: [
-            { id: 1, name: 'Express Voyager', type: 'Luxury' },
-            { id: 2, name: 'Night Rider', type: 'Semi-Luxury' }
-        ],
-        schedules: [
-            {
-                id: 1,
-                route: 'Kathmandu → Pokhara',
-                busName: 'Express Voyager',
-                busType: 'Luxury',
-                departureDate: '2024-02-15',
-                departureTime: '10:00 AM',
-                duration: '6 hours',
-                price: 1200,
-                boardingPoint: 'New Bus Park',
-                status: 'upcoming',
-                delay: 0,
-                reason: '',
-                foodBreaks: []
+        routes: [],
+        buses: [],
+        schedules: [],
+        async init() {
+            try {
+                // Load all data first
+                await this.loadAllData();
+
+                // Setup auto-refresh every 30 seconds
+                setInterval(() => this.loadAllData(), 30000);
+            } catch (error) {
+                console.error('Error in init:', error);
             }
-        ],
+        },
+        async loadAllData() {
+            try {
+                // Fetch routes
+                const routesResponse = await fetch('/admin/routes');
+                const routesData = await routesResponse.json();
+                if (routesData.success) {
+                    this.routes = routesData.routes.map(route => ({
+                        id: route.id,
+                        from: route.from,
+                        to: route.to
+                    }));
+                }
+
+                // Fetch buses
+                const busesResponse = await fetch('/admin/buses');
+                const busesData = await busesResponse.json();
+                if (busesData.success) {
+                    this.buses = busesData.buses.map(bus => ({
+                        id: bus.id,
+                        name: bus.name,
+                        type: bus.standard.name
+                    }));
+                }
+
+                // Fetch existing schedules
+                const schedulesResponse = await fetch('/admin/schedules');
+                const schedulesData = await schedulesResponse.json();
+                if (schedulesData.success) {
+                    this.schedules = schedulesData.schedules;
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        },
         get filteredSchedules() {
             return this.schedules.filter(schedule => {
                 const matchesSearch = !this.searchTerm ||
@@ -436,51 +450,125 @@ function scheduleManager() {
         get totalBuses() {
             return this.schedules.length;
         },
-        addFoodBreak() {
-            this.scheduleForm.foodBreaks.push({
-                location: '',
-                time: '',
-                duration: 30
-            });
-        },
-        removeFoodBreak(index) {
-            this.scheduleForm.foodBreaks.splice(index, 1);
-        },
         editSchedule(schedule) {
             this.editingSchedule = schedule;
             this.scheduleForm = {
-                ...schedule,
-                foodBreaks: schedule.foodBreaks || []
+                routeId: schedule.route_id,
+                busId: schedule.bus_id,
+                departureDate: schedule.departureDate,
+                departureTime: schedule.departureTime,
+                duration: parseInt(schedule.duration),
+                price: schedule.price,
+                boardingPoint: schedule.boardingPoint,
+                foodBreak: schedule.foodBreak || {
+                    location: '',
+                    time: '',
+                    duration: 30
+                }
             };
+            console.log('Edit form data:', this.scheduleForm); // Debug log
             this.showModal = true;
         },
-        saveSchedule() {
-            // Implementation for saving schedule
-            this.showModal = false;
+        async updateForm() {
+            const formData = {
+                route_id: this.scheduleForm.routeId,
+                bus_id: this.scheduleForm.busId,
+                departure_date: this.scheduleForm.departureDate,
+                departure_time: this.scheduleForm.departureTime,
+                duration: this.scheduleForm.duration,
+                price: this.scheduleForm.price,
+                boarding_point: this.scheduleForm.boardingPoint,
+                food_break: this.scheduleForm.foodBreak
+            };
+
+            try {
+                const response = await fetch(`/admin/schedules/${this.editingSchedule.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    await this.loadAllData(); // Refresh the data
+                    this.showModal = false;
+                    this.resetForm();
+                    alert('Schedule updated successfully');
+                } else {
+                    alert(data.message || 'Failed to update schedule');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update schedule');
+            }
+        },
+        resetForm() {
+            this.scheduleForm = {
+                routeId: '',
+                busId: '',
+                departureDate: '',
+                departureTime: '',
+                duration: '',
+                price: '',
+                boardingPoint: '',
+                foodBreak: {
+                    location: '',
+                    time: '',
+                    duration: 30
+                }
+            };
+            this.editingSchedule = null;
         },
         updateStatus(schedule) {
             this.selectedSchedule = schedule;
             this.statusForm = {
-                status: schedule.status,
+                status: schedule.status || 'upcoming',
                 delay: schedule.delay || 0,
                 reason: schedule.reason || ''
             };
+            console.log('Current status form:', this.statusForm); // Debug log
             this.showStatusModal = true;
         },
         saveStatus() {
             if (this.selectedSchedule) {
-                Object.assign(this.selectedSchedule, {
+                const statusData = {
                     status: this.statusForm.status,
-                    delay: this.statusForm.delay,
-                    reason: this.statusForm.reason
+                    delay_minutes: this.statusForm.status === 'delayed' ? this.statusForm.delay : 0,
+                    status_reason: this.statusForm.reason
+                };
+
+                // Debug log
+                console.log('Status update payload:', statusData);
+
+                fetch(`/admin/schedules/${this.selectedSchedule.id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(statusData)
+                })
+                .then(response => response.json())
+                .then(async data => {
+                    if (data.success) {
+                        // Refresh all data to ensure consistency
+                        await this.loadAllData();
+                        this.showStatusModal = false;
+                        this.selectedSchedule = null;
+                        alert('Status updated successfully');
+                    } else {
+                        alert(data.message || 'Failed to update status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update status');
                 });
-
-                // Here you would typically make an API call to update the status
-
-                this.showStatusModal = false;
-                this.selectedSchedule = null;
-                // Show success message
-                alert('Status updated successfully');
             }
         },
         confirmDelete(schedule) {
@@ -489,14 +577,30 @@ function scheduleManager() {
         },
         deleteSchedule() {
             if (this.scheduleToDelete) {
-                // Filter out the schedule to delete
-                this.schedules = this.schedules.filter(s => s.id !== this.scheduleToDelete.id);
-                // Here you would typically make an API call to delete the schedule
-
-                this.showDeleteModal = false;
-                this.scheduleToDelete = null;
-                // Show success message
-                alert('Schedule deleted successfully');
+                fetch(`/admin/schedules/${this.scheduleToDelete.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove from local array
+                        this.schedules = this.schedules.filter(s => s.id !== this.scheduleToDelete.id);
+                        this.showDeleteModal = false;
+                        this.scheduleToDelete = null;
+                        alert('Schedule deleted successfully');
+                    } else {
+                        alert(data.message || 'Failed to delete schedule');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete schedule');
+                });
             }
         },
         toggleStatus(scheduleId) {

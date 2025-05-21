@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminControllers\BusController;
 use App\Http\Controllers\AdminControllers\BusRouteController;
 use App\Http\Controllers\AdminControllers\BusFeatureController;
 use App\Http\Controllers\AdminControllers\BusStandardController;
+use App\Http\Controllers\AdminControllers\ScheduleController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BlogController;
 use App\Models\blog;
@@ -111,4 +112,15 @@ Route::prefix('admin')->group(function () {
     Route::delete('/buses/{bus}', [BusController::class, 'destroy'])->name('admin.buses.destroy');
     Route::get('/bus-standards', [BusStandardController::class, 'getStandards']);
     Route::get('/bus-features', [BusFeatureController::class, 'getFeatures']);
+    
+    // Schedule routes
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('admin.schedules');
+    Route::post('/schedules', [ScheduleController::class, 'store'])->name('admin.schedules.store');
+    Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('admin.schedules.update');
+    Route::put('/schedules/{schedule}/status', [ScheduleController::class, 'updateStatus'])->name('admin.schedules.status');
+    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
+    
+    // Add these new routes
+    Route::get('/routes', [BusRouteController::class, 'getRoutes']);
+    Route::get('/buses', [BusController::class, 'getBuses']);
 });

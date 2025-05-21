@@ -140,4 +140,34 @@ class BusRouteController extends Controller
             ], 500);
         }
     }
+
+    public function getRoutes()
+    {
+        try {
+            $routes = BusRoute::select('id', 'from', 'to', 'distance', 'duration', 'status', 'routeImage')
+                ->get()
+                ->map(function($route) {
+                    return [
+                        'id' => $route->id,
+                        'from' => $route->from,
+                        'to' => $route->to,
+                        'distance' => $route->distance,
+                        'duration' => $route->duration,
+                        'status' => $route->status ? 'active' : 'inactive',
+                        'image' => $route->routeImage
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'routes' => $routes
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching routes: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching routes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

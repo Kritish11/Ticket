@@ -174,4 +174,20 @@ class BusController extends Controller
             ], 500);
         }
     }
+
+    public function getBuses()
+    {
+        try {
+            $buses = Bus::with('standard')->get();
+            return response()->json([
+                'success' => true,
+                'buses' => $buses
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching buses: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
