@@ -212,18 +212,25 @@ class BusRouteController extends Controller
     public function getActiveRoutes()
     {
         try {
+            Log::info('Fetching active routes'); // Debug log
+
             $routes = BusRoute::where('status', true)
                 ->select('id', 'from', 'to', 'duration', 'distance')
                 ->get()
                 ->map(function($route) {
+                    Log::info('Processing route:', ['route' => $route->toArray()]); // Debug log
+
                     return [
                         'id' => $route->id,
                         'from' => $route->from,
                         'to' => $route->to,
                         'duration' => $route->duration,
-                        'distance' => $route->distance
+                        'distance' => $route->distance,
+                        'display_name' => "{$route->from} to {$route->to} ({$route->duration})"
                     ];
                 });
+
+            Log::info('Active routes response:', ['routes' => $routes->toArray()]); // Debug log
 
             return response()->json([
                 'success' => true,
@@ -231,6 +238,7 @@ class BusRouteController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching active routes: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching routes'

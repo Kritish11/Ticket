@@ -11,7 +11,7 @@ use App\Http\Controllers\AdminControllers\AdminUserController;  // Update this l
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BlogController;
-use App\Http\Controllers\BookingController;
+// use App\Http\Controllers\BookingController;
 use App\Models\blog;
 use Illuminate\Support\Facades\Route;
 
@@ -87,11 +87,11 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.o
 Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
 
 // Authentication Routes
-Route::middleware(['user.auth'])->group(function() {
-    Route::post('/book-ticket', 'BookingController@store')->name('book.ticket');
-    Route::get('/mybookings', 'BookingController@index')->name('user.bookings');
-    Route::get('/profile', 'UserController@profile')->name('user.profile');
-});
+// Route::middleware(['user.auth'])->group(function() {
+//     Route::post('/book-ticket', 'BookingController')->name('book.ticket');
+//     Route::get('/mybookings', 'BookingController')->name('user.bookings');
+//     Route::get('/profile', 'UserController')->name('user.profile');
+// });
 
 // Protected booking routes
 Route::middleware(['user.auth'])->group(function() {
@@ -107,9 +107,9 @@ Route::middleware(['user.auth'])->group(function() {
 });
 
 // Ticket routes with middleware protection
-Route::middleware(['user.auth', 'ticket.access'])->group(function() {
-    Route::get('/ticket/{id}', [BookingController::class, 'showTicket'])->name('ticket.show');
-});
+// Route::middleware(['user.auth', 'ticket.access'])->group(function() {
+//     Route::get('/ticket/{id}', [BookingController::class, 'showTicket'])->name('ticket.show');
+// });
 
 // Search and Booking Flow Routes
 Route::get('/search', function() {
@@ -118,17 +118,17 @@ Route::get('/search', function() {
 
 Route::get('/search', [ScheduleController::class, 'searchSchedules'])->name('schedules.search');
 
-Route::get('/seatselect/{scheduleId}', [BookingController::class, 'showSeatSelection'])
-    ->name('booking.seats');
+// Route::get('/seatselect/{scheduleId}', [BookingController::class, 'showSeatSelection'])
+//     ->name('booking.seats');
 
-Route::get('/reservation/{scheduleId}', [BookingController::class, 'showReservation'])
-    ->middleware('user.auth')
-    ->name('booking.reservation');
+// Route::get('/reservation/{scheduleId}', [BookingController::class, 'showReservation'])
+//     ->middleware('user.auth')
+//     ->name('booking.reservation');
 
-// Update reservation route
-Route::post('/complete-booking', [BookingController::class, 'completeBooking'])
-    ->middleware('user.auth')
-    ->name('booking.complete');
+// // Update reservation route
+// Route::post('/complete-booking', [BookingController::class, 'completeBooking'])
+//     ->middleware('user.auth')
+//     ->name('booking.complete');
 
 // Admin guest routes (accessible without login)
 Route::get('/adminlogin', function() {
@@ -158,6 +158,14 @@ Route::middleware(['admin'])->prefix('admin')->group(function() {
 
     Route::get('/admin/routes/active', [BusRouteController::class, 'getActiveRoutes']);
     Route::get('/admin/routes/{route}/available-buses', [BusRouteController::class, 'getAvailableBuses']);
+
+    // Add these routes for bus and route fetching
+    Route::get('/routes/active', [BusRouteController::class, 'getActiveRoutes']);
+    Route::get('/buses/list', [BusController::class, 'getBusesList']);
+
+    // Add these routes for schedule management
+    Route::get('/routes/active', [BusRouteController::class, 'getActiveRoutes']);
+    Route::get('/buses/list', [BusController::class, 'getBusesList']);
 
     // Feature routes
     Route::post('/feature_add',[BusFeatureController::class,'addFeature'])->name('feature.save');
@@ -201,6 +209,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function() {
     Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
 
     Route::get('/routes', [BusRouteController::class, 'getRoutes']);
+
     Route::post('/banners', [BannerController::class, 'store']);
 
     // Banner routes
@@ -216,10 +225,10 @@ Route::middleware(['admin'])->prefix('admin')->group(function() {
     Route::delete('/graphics/{graphic}', [GraphicController::class, 'destroy']);
 });
 
-Route::prefix('admin')->middleware(['auth.admin'])->group(function () {
-    Route::get('/buses/list', [BusController::class, 'getBusesList']);
-    Route::get('/routes/active', [BusRouteController::class, 'getActiveRoutes']);
-});
+// Route::prefix('admin')->middleware(['auth.admin'])->group(function () {
+//     Route::get('/buses', [BusController::class, 'getBusesList']);
+//     Route::get('/routes/active', [BusRouteController::class, 'getActiveRoutes']);
+// });
 
 // Feature and Standard Management Routes
 Route::middleware(['web'])->prefix('admin')->group(function () {
@@ -235,5 +244,5 @@ Route::middleware(['web'])->prefix('admin')->group(function () {
 
     Route::get('/bus-standards', [BusStandardController::class, 'index'])->name('bus.standards');
     Route::get('/bus-features', [BusFeatureController::class, 'index'])->name('bus.features');
-    Route::resource('buses', BusController::class);
+    // Route::resource('buses', BusController::class);
 });

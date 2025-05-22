@@ -180,49 +180,6 @@
         </table>
     </div>
 
-    <!-- Add Modal -->
-    <div x-show="showAddModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-        <div @click.away="showAddModal = false" class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold">Add New Schedule</h3>
-                <button @click="showAddModal = false" class="text-gray-500 hover:text-gray-700">&times;</button>
-            </div>
-
-            <form @submit.prevent="submitSchedule" class="space-y-4">
-                <!-- Route Selection -->
-                <div class="mb-4">
-                    <label class="block font-medium mb-1">Select Route</label>
-                    <select x-model="formData.route_id"
-                            @change="loadAvailableBuses()"
-                            class="w-full border rounded px-3 py-2"
-                            required>
-                        <option value="">Choose a route</option>
-                        <template x-for="route in routes" :key="route.id">
-                            <option :value="route.id"
-                                    x-text="`${route.from} to ${route.to} (${route.duration})`">
-                            </option>
-                        </template>
-                    </select>
-                </div>
-
-                <!-- Bus Selection -->
-                <div class="mb-4">
-                    <label class="block font-medium mb-1">Select Bus</label>
-                    <select x-model="formData.bus_id"
-                            class="w-full border rounded px-3 py-2"
-                            required>
-                        <option value="">Choose a bus</option>
-                        <template x-for="bus in buses" :key="bus.id">
-                            <option :value="bus.id"
-                                    x-text="`${bus.name} (${bus.number_plate}) - ${bus.standard}`">
-                            </option>
-                        </template>
-                    </select>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Add/Edit Schedule Modal -->
     <div x-show="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
         <div @click.away="showModal = false" class="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
@@ -233,17 +190,6 @@
 
             <form @submit.prevent="editingSchedule ? updateForm() : saveSchedule()" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <!-- Bus Selection -->
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Select Bus</label>
-                        <select x-model="scheduleForm.busId" class="w-full border rounded px-3 py-2" required>
-                            <option value="">Select a Bus</option>
-                            <template x-for="bus in availableBuses" :key="bus.id">
-                                <option :value="bus.id" x-text="`${bus.name} - ${bus.number_plate} (${bus.type})`"></option>
-                            </template>
-                        </select>
-                    </div>
-
                     <!-- Route Selection -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Route</label>
@@ -251,6 +197,17 @@
                             <option value="">Select Route</option>
                             <template x-for="route in routes" :key="route.id">
                                 <option :value="route.id" x-text="`${route.from} → ${route.to}`"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Bus Selection -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Bus</label>
+                        <select x-model="scheduleForm.busId" class="w-full border rounded px-3 py-2" required>
+                            <option value="">Select Bus</option>
+                            <template x-for="bus in availableBuses" :key="bus.id">
+                                <option :value="bus.id" x-text="bus.name"></option>
                             </template>
                         </select>
                     </div>
@@ -396,7 +353,6 @@
 function scheduleManager() {
     return {
         showModal: false,
-        showAddModal: false,
         showStatusModal: false,
         showDeleteModal: false,
         searchTerm: '',
@@ -420,10 +376,6 @@ function scheduleManager() {
                 duration: 30
             }
         },
-        formData: {
-            route_id: '',
-            bus_id: '',
-        },
         statusForm: {
             status: 'upcoming',
             delay: 0,
@@ -431,46 +383,16 @@ function scheduleManager() {
         },
         routes: [],
         buses: [],
-        availableBuses: [],
         schedules: [],
         async init() {
             try {
-                // Load routes and buses when component initializes
-                await Promise.all([
-                    this.loadRoutes(),
-                    this.loadBuses()
-                ]);
-                console.log('Component initialized');
+                // Load all data first
+                await this.loadAllData();
+
+                // Setup auto-refresh every 30 seconds
+                setInterval(() => this.loadAllData(), 30000);
             } catch (error) {
-                console.error('Error initializing:', error);
-            }
-        },
-        async loadRoutes() {
-            try {
-                const response = await fetch('/admin/routes/active');
-                const data = await response.json();
-                if (data.success) {
-                    this.routes = data.routes;
-                    console.log('Loaded routes:', this.routes);
-                } else {
-                    console.error('Failed to load routes:', data.message);
-                }
-            } catch (error) {
-                console.error('Error loading routes:', error);
-            }
-        },
-        async loadBuses() {
-            try {
-                const response = await fetch('/admin/buses/list');
-                const data = await response.json();
-                if (data.success) {
-                    this.buses = data.buses;
-                    console.log('Loaded buses:', this.buses);
-                } else {
-                    console.error('Failed to load buses:', data.message);
-                }
-            } catch (error) {
-                console.error('Error loading buses:', error);
+                console.error('Error in init:', error);
             }
         },
         async loadAllData() {
@@ -495,6 +417,7 @@ function scheduleManager() {
                         name: bus.name,
                         type: bus.standard.name
                     }));
+                    console.log("this is test ", this.buses);
                 }
 
                 // Fetch existing schedules
@@ -505,23 +428,6 @@ function scheduleManager() {
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
-            }
-        },
-        async loadAvailableBuses() {
-            if (!this.formData.route_id) {
-                this.availableBuses = [];
-                return;
-            }
-
-            try {
-                const response = await fetch(`/admin/routes/${this.formData.route_id}/available-buses`);
-                const data = await response.json();
-                if (data.success) {
-                    this.availableBuses = data.buses;
-                    this.formData.bus_id = ''; // Reset bus selection
-                }
-            } catch (error) {
-                console.error('Error loading available buses:', error);
             }
         },
         get filteredSchedules() {
@@ -666,71 +572,42 @@ function scheduleManager() {
                 delay: schedule.delay || 0,
                 reason: schedule.reason || ''
             };
+            console.log('Current status form:', this.statusForm); // Debug log
             this.showStatusModal = true;
         },
         saveStatus() {
-            if (!this.selectedSchedule) return;
+            if (this.selectedSchedule) {
+                const statusData = {
+                    status: this.statusForm.status,
+                    delay_minutes: this.statusForm.status === 'delayed' ? this.statusForm.delay : 0,
+                    status_reason: this.statusForm.reason || null // Allow null for empty reason
+                };
 
-            // Validate delay for delayed status
-            if (this.statusForm.status === 'delayed' && (!this.statusForm.delay || this.statusForm.delay < 1)) {
-                alert('Please enter a valid delay duration');
-                return;
-            }
-
-            const statusData = {
-                status: this.statusForm.status,
-                delay_minutes: this.statusForm.status === 'delayed' ? parseInt(this.statusForm.delay) : 0,
-                status_reason: this.statusForm.reason || ''
-            };
-
-            // Debug logging
-            console.log('Updating status:', {
-                scheduleId: this.selectedSchedule.id,
-                data: statusData
-            });
-
-            fetch(`/admin/schedules/${this.selectedSchedule.id}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(statusData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Update local schedule data
-                    const index = this.schedules.findIndex(s => s.id === this.selectedSchedule.id);
-                    if (index !== -1) {
-                        this.schedules[index] = {
-                            ...this.schedules[index],
-                            status: statusData.status,
-                            delay: statusData.delay_minutes,
-                            reason: statusData.status_reason
-                        };
+                fetch(`/admin/schedules/${this.selectedSchedule.id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(statusData)
+                })
+                .then(response => response.json())
+                .then(async data => {
+                    if (data.success) {
+                        await this.loadAllData();
+                        this.showStatusModal = false;
+                        this.selectedSchedule = null;
+                        alert('Status updated successfully');
+                    } else {
+                        alert(data.message || 'Failed to update status');
                     }
-
-                    this.showStatusModal = false;
-                    this.selectedSchedule = null;
-                    alert('Status updated successfully');
-
-                    // Refresh data to ensure consistency
-                    this.loadAllData();
-                } else {
-                    throw new Error(data.message || 'Failed to update status');
-                }
-            })
-            .catch(error => {
-                console.error('Error updating status:', error);
-                alert('Failed to update status: ' + error.message);
-            });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update status');
+                });
+            }
         },
         confirmDelete(schedule) {
             this.scheduleToDelete = schedule;

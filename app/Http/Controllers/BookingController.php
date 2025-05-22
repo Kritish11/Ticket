@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Schedule;
+use App\Models\Ticket;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller

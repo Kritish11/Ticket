@@ -14,20 +14,32 @@ class BusController extends Controller
 {
     public function index()
     {
-        try {
-            // Ensure features are loaded with the bus data
-            $buses = Bus::with(['standard'])->latest()->get()->map(function($bus) {
-                $bus->features = is_array($bus->features) ? $bus->features : [];
-                $bus->images = is_array($bus->images) ? $bus->images : [];
-                return $bus;
-            });
-            $features = \App\Models\BusFeature::all();
-            $standards = BusStandard::all();
+        // try {
+        //     // Ensure features are loaded with the bus data
+        //     $buses = Bus::with(['standard'])->latest()->get()->map(function($bus) {
+        //         $bus->features = is_array($bus->features) ? $bus->features : [];
+        //         $bus->images = is_array($bus->images) ? $bus->images : [];
+        //         return $bus;
+        //     });
+        //     $features = \App\Models\BusFeature::all();
+        //     $standards = BusStandard::all();
 
-            return view('AdminViews.buses', compact('buses', 'features', 'standards'));
+        //     return view('AdminViews.buses', compact('buses', 'features', 'standards'));
+        // } catch (\Exception $e) {
+        //     Log::error('Error fetching buses: ' . $e->getMessage());
+        //     return view('AdminViews.buses')->with('error', 'Error loading buses');
+        // }
+        try {
+            $buses = Bus::with('standard')->get();
+            return response()->json([
+                'success' => true,
+                'buses' => $buses
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching buses: ' . $e->getMessage());
-            return view('AdminViews.buses')->with('error', 'Error loading buses');
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching buses: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -224,18 +236,25 @@ class BusController extends Controller
     public function getBusesList()
     {
         try {
-            $buses = Bus::with('standard')
-                ->select('id', 'name', 'number_plate', 'standard_id', 'seats')
+            Log::info('Fetching buses list'); // Debug log
+
+            $buses = Bus::with(['standard'])
+                ->where('status', true)  // Only get active buses
                 ->get()
                 ->map(function($bus) {
+                    Log::info('Processing bus:', ['bus' => $bus->toArray()]); // Debug log
+
                     return [
                         'id' => $bus->id,
                         'name' => $bus->name,
                         'number_plate' => $bus->number_plate,
+                        'type' => $bus->standard->name ?? 'N/A',
                         'seats' => $bus->seats,
-                        'standard' => optional($bus->standard)->name ?? 'N/A'
+                        'display_name' => "{$bus->name} ({$bus->number_plate})"
                     ];
                 });
+
+            Log::info('Buses list response:', ['buses' => $buses->toArray()]); // Debug log
 
             return response()->json([
                 'success' => true,
@@ -243,6 +262,7 @@ class BusController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching buses: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching buses'

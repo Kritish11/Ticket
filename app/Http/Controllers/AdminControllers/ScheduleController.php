@@ -137,24 +137,18 @@ class ScheduleController extends Controller
     public function updateStatus(Request $request, Schedule $schedule)
     {
         try {
-            Log::info('Status update request:', $request->all());
-
             $validated = $request->validate([
                 'status' => 'required|in:upcoming,delayed,cancelled',
                 'delay_minutes' => 'required_if:status,delayed|nullable|integer|min:0',
-                'status_reason' => 'nullable|string'
+                'status_reason' => 'nullable|string' // Made reason optional for all statuses
             ]);
 
-            // Reset delay minutes for non-delayed status
+            // Set delay_minutes to 0 for non-delayed status
             if ($validated['status'] !== 'delayed') {
                 $validated['delay_minutes'] = 0;
             }
 
-            // Update the schedule
-            $schedule->status = $validated['status'];
-            $schedule->delay_minutes = $validated['delay_minutes'];
-            $schedule->status_reason = $validated['status_reason'];
-            $schedule->save();
+            $schedule->update($validated);
 
             // Load relationships and format response
             $schedule->load(['route', 'bus.standard']);
@@ -175,8 +169,6 @@ class ScheduleController extends Controller
                 'reason' => $schedule->status_reason,
                 'foodBreak' => $schedule->food_break
             ];
-
-            Log::info('Status updated successfully:', $formattedSchedule);
 
             return response()->json([
                 'success' => true,
