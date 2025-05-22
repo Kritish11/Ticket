@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminControllers\AdminUserController;  // Update this l
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\BookingController;
 use App\Models\blog;
 use Illuminate\Support\Facades\Route;
 
@@ -26,9 +27,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
+
+// Route for fetching locations
+Route::get('/get-locations', [BusRouteController::class, 'getLocations'])->name('locations.get');
+
+// Update home route to fetch locations
 Route::get('/', function () {
-    return view('index');
+    $fromLocations = \App\Models\BusRoute::distinct('from')->pluck('from')->sort()->values();
+    $toLocations = \App\Models\BusRoute::distinct('to')->pluck('to')->sort()->values();
+
+    return view('index', compact('fromLocations', 'toLocations'));
 });
+
 Route::get('/search', function() {
     return view('search');
 });
@@ -39,6 +49,7 @@ Route::get('/aboutus', function() {
     return view('aboutus');
 });
 
+// Login routes
 Route::get('/login', function() {
     if (session()->has('is_logged_in')) {
         return redirect('/');
@@ -95,10 +106,17 @@ Route::middleware(['user.auth'])->group(function() {
     });
 });
 
+// Ticket routes with middleware protection
+Route::middleware(['user.auth', 'ticket.access'])->group(function() {
+    Route::get('/ticket/{id}', [BookingController::class, 'showTicket'])->name('ticket.show');
+});
+
 // Search and Booking Flow Routes
 Route::get('/search', function() {
     return view('search');
 });
+
+Route::get('/search', [ScheduleController::class, 'searchSchedules'])->name('schedules.search');
 
 Route::get('/seatselect/{scheduleId}', [BookingController::class, 'showSeatSelection'])
     ->name('booking.seats');
@@ -106,6 +124,11 @@ Route::get('/seatselect/{scheduleId}', [BookingController::class, 'showSeatSelec
 Route::get('/reservation/{scheduleId}', [BookingController::class, 'showReservation'])
     ->middleware('user.auth')
     ->name('booking.reservation');
+
+// Update reservation route
+Route::post('/complete-booking', [BookingController::class, 'completeBooking'])
+    ->middleware('user.auth')
+    ->name('booking.complete');
 
 // Admin guest routes (accessible without login)
 Route::get('/adminlogin', function() {
@@ -128,9 +151,13 @@ Route::middleware(['admin'])->prefix('admin')->group(function() {
     Route::get('/buses', [BusController::class, 'index'])->name('admin.buses');
     Route::get('/routes', [BusRouteController::class, 'showRoute'])->name('admin.routes');
 
-    Route::post('/route_add',[BusRouteController::class,'addRoute'])->name('route.save');
-    Route::post('/route/{id}', [BusRouteController::class, 'updateRoute'])->name('route.update');
-    Route::delete('/route/{id}', [BusRouteController::class, 'deleteRoute'])->name('route.delete');
+    // Update the route management routes
+    Route::post('/routes', [BusRouteController::class, 'addRoute'])->name('route.save');
+    Route::put('/routes/{id}', [BusRouteController::class, 'updateRoute'])->name('route.update');
+    Route::delete('/routes/{id}', [BusRouteController::class, 'deleteRoute'])->name('route.delete');
+
+    Route::get('/admin/routes/active', [BusRouteController::class, 'getActiveRoutes']);
+    Route::get('/admin/routes/{route}/available-buses', [BusRouteController::class, 'getAvailableBuses']);
 
     // Feature routes
     Route::post('/feature_add',[BusFeatureController::class,'addFeature'])->name('feature.save');
@@ -164,6 +191,8 @@ Route::middleware(['admin'])->prefix('admin')->group(function() {
     Route::get('/bus-standards', [BusStandardController::class, 'getStandards']);
     Route::get('/bus-features', [BusFeatureController::class, 'getFeatures']);
 
+    Route::get('/buses/list', [BusController::class, 'getBusesList'])->name('admin.buses.list');
+
     // Schedule routes
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('admin.schedules');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('admin.schedules.store');
@@ -185,4 +214,26 @@ Route::middleware(['admin'])->prefix('admin')->group(function() {
     Route::post('/graphics', [GraphicController::class, 'store']);
     Route::match(['put', 'patch'], '/graphics/{graphic}', [GraphicController::class, 'update']);
     Route::delete('/graphics/{graphic}', [GraphicController::class, 'destroy']);
+});
+
+Route::prefix('admin')->middleware(['auth.admin'])->group(function () {
+    Route::get('/buses/list', [BusController::class, 'getBusesList']);
+    Route::get('/routes/active', [BusRouteController::class, 'getActiveRoutes']);
+});
+
+// Feature and Standard Management Routes
+Route::middleware(['web'])->prefix('admin')->group(function () {
+    // Bus Feature Routes
+    Route::get('/features', [BusFeatureController::class, 'index'])->name('admin.features.index');
+    Route::post('/features', [BusFeatureController::class, 'store'])->name('admin.features.store');
+    Route::delete('/features/{id}', [BusFeatureController::class, 'destroy'])->name('admin.features.destroy');
+
+    // Bus Standard Routes
+    Route::get('/standards', [BusStandardController::class, 'index'])->name('admin.standards.index');
+    Route::post('/standards', [BusStandardController::class, 'store'])->name('admin.standards.store');
+    Route::delete('/standards/{id}', [BusStandardController::class, 'destroy'])->name('admin.standards.destroy');
+
+    Route::get('/bus-standards', [BusStandardController::class, 'index'])->name('bus.standards');
+    Route::get('/bus-features', [BusFeatureController::class, 'index'])->name('bus.features');
+    Route::resource('buses', BusController::class);
 });

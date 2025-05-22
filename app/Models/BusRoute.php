@@ -18,8 +18,18 @@ class BusRoute extends Model
         'routeImage'
     ];
 
+    protected $attributes = [
+        'status' => true // Default value for new routes
+    ];
+
     protected $casts = [
         'status' => 'boolean',
         'distance' => 'float'
     ];
+
+    // Optional: Add accessor for human-readable status
+    public function getStatusTextAttribute()
+    {
+        return $this->status ? 'active' : 'inactive';
+    }
 }

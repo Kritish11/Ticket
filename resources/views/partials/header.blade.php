@@ -48,29 +48,18 @@
 
         <div class="hidden lg:flex items-center space-x-2 mr-8 py-2">
             @if(session('is_logged_in'))
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center space-x-2 px-6 py-2 bg-white text-black rounded hover:bg-gray-200 border border-black text-[16px]">
-                        <span>{{ session('user_name') }}</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                <span class="text-gray-800 font-medium">{{ session('user_name') }}</span>
+                <form method="POST" action="{{ route('logout') }}" class="inline-block ml-4">
+                    @csrf
+                    <button type="submit" class="text-gray-600 hover:text-red-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                         </svg>
                     </button>
-
-                    <div x-show="open"
-                         @click.away="open = false"
-                         class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                        <a href="/mybooking" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Bookings</a>
-                        <form method="POST" action="{{ route('logout') }}" class="block w-full">
-                            @csrf
-                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                </form>
             @else
-                <a href="/login" class="px-6 py-2 bg-white text-black rounded hover:bg-gray-200 border border-black text-[16px]">Login</a>
-                <a href="/register" class="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 border text-[16px]">Sign Up</a>
+                <a href="{{ route('login') }}" class="px-6 py-2 bg-white text-black rounded hover:bg-gray-200 border border-black text-[16px]">Login</a>
+                <a href="{{ route('register') }}" class="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 border text-[16px]">Sign Up</a>
             @endif
         </div>
     </div>

@@ -66,28 +66,28 @@
     <section id="search-section" class="container px-4 py-8 w-[70%] mx-auto mt-[-100px]">
         <div class="bg-white shadow-lg rounded-lg p-8">
             <h3 class="text-[18px] font-bold mb-6 text-start">Find Your Perfect Journey</h3>
-            <form action="#" method="GET" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+            <form action="#" method="GET" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4" id="searchForm">
                 <div class="w-full">
                     <label for="from" class="block text-sm font-medium text-gray-700 mb-1">From</label>
-                    <select id="from" name="from" class="custom-select w-full p-2 pr-10 border border-gray-300 rounded text-gray-400">
+                    <select id="from" name="from" class="custom-select w-full p-2 pr-10 border border-gray-300 rounded text-gray-400" required>
                         <option value="" disabled selected>Select City</option>
-                        <option value="kathmandu">Kathmandu</option>
-                        <option value="chitwan">Chitwan</option>
-                        <option value="pokhara">Pokhara</option>
+                        @foreach($fromLocations as $location)
+                            <option value="{{ $location }}">{{ $location }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="w-full">
                     <label for="to" class="block text-sm font-medium text-gray-700 mb-1">To</label>
-                    <select id="to" name="to" class="custom-select w-full p-2 pr-10 border border-gray-300 rounded text-gray-400">
+                    <select id="to" name="to" class="custom-select w-full p-2 pr-10 border border-gray-300 rounded text-gray-400" required>
                         <option value="" disabled selected>Select City</option>
-                        <option value="kathmandu">Kathmandu</option>
-                        <option value="chitwan">Chitwan</option>
-                        <option value="pokhara">Pokhara</option>
+                        @foreach($toLocations as $location)
+                            <option value="{{ $location }}">{{ $location }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="w-full">
                     <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Travelling Date</label>
-                    <input type="date" id="date" name="date" class="w-full p-2 border border-gray-300 rounded">
+                    <input type="date" id="date" name="date" class="w-full p-2 border border-gray-300 rounded" required>
                 </div>
                 <div class="w-full flex items-end">
                     <button type="submit" class="w-full p-2 bg-black text-white rounded hover:bg-gray-800">Search</button>
@@ -362,5 +362,51 @@
     <!-- Footer Section -->
     @include('partials.footer')
 
+    <!-- Add this script before closing body tag -->
+    <script>
+        // Set minimum date to today
+        const dateInput = document.getElementById('date');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+
+        // Prevent selecting same location for from and to
+        const fromSelect = document.getElementById('from');
+        const toSelect = document.getElementById('to');
+
+        fromSelect.addEventListener('change', function() {
+            enableAllOptions(toSelect);
+            disableOption(toSelect, this.value);
+        });
+
+        toSelect.addEventListener('change', function() {
+            enableAllOptions(fromSelect);
+            disableOption(fromSelect, this.value);
+        });
+
+        function enableAllOptions(select) {
+            Array.from(select.options).forEach(option => {
+                option.disabled = false;
+            });
+        }
+
+        function disableOption(select, value) {
+            Array.from(select.options).forEach(option => {
+                if (option.value === value) {
+                    option.disabled = true;
+                }
+            });
+        }
+
+        // Form validation
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // You can add your search logic here later
+            console.log('Form submitted with:', {
+                from: fromSelect.value,
+                to: toSelect.value,
+                date: dateInput.value
+            });
+        });
+    </script>
 </body>
 </html>

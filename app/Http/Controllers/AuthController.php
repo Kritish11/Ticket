@@ -144,6 +144,7 @@ class AuthController extends Controller
                     ->first();
 
         if ($user && Hash::check($credentials['password'], $user->password)) {
+            // Store user info in session
             session([
                 'user_id' => $user->id,
                 'user_name' => $user->name,
@@ -151,13 +152,13 @@ class AuthController extends Controller
                 'is_logged_in' => true
             ]);
 
-            return redirect('/')  // Changed from redirect()->intended('/')
+            return redirect()->intended('/')
                 ->with('success', 'Welcome back, ' . $user->name);
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.'
-        ])->withInput($request->only('email'));
+        return back()
+            ->withErrors(['email' => 'Invalid credentials'])
+            ->withInput($request->only('email'));
     }
 
     public function logout(Request $request)

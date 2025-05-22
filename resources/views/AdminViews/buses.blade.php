@@ -68,15 +68,15 @@
     </div>
 
     <!-- Add Modal -->
-    <div x-show="showAddModal" 
-         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" 
+    <div x-show="showAddModal"
+         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
          style="display: none;">
         <div @click.away="showAddModal = false"
              class="bg-white rounded-lg shadow-lg w-full max-w-lg relative flex flex-col max-h-[90vh]">
             <button @click="showAddModal = false" class="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl">&times;</button>
             <div class="text-xl font-bold mb-4 px-6 pt-6">Add New Bus</div>
             <form @submit.prevent="submitForm" class="flex-1 flex flex-col overflow-y-auto px-6 pb-2">
-                <!-- Existing form fields -->
+                <!-- Basic Info -->
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Bus Name</label>
                     <input type="text" x-model="formData.name" class="w-full border rounded px-3 py-2" required>
@@ -94,41 +94,34 @@
                     <label class="block font-semibold mb-1">Number Plate</label>
                     <input type="text" x-model="formData.number_plate" class="w-full border rounded px-3 py-2" required>
                 </div>
+
+                <!-- Images Section -->
                 <div class="mb-3">
-                    <label class="block font-semibold mb-1">Interior & Exterior Images (6 PNGs minimum)</label>
-                    <div>
-                        <template x-if="images.length < 6">
-                            <label :class="images.length ? 'w-24 h-24 p-2' : 'w-full p-4' + ' flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition mb-2'">
-                                <span class="text-gray-600 mb-2">
-                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12m-4 4h-4a1 1 0 01-1-1v-1h10v1a1 1 0 01-1 1h-4z" />
-                                    </svg>
-                                </span>
-                                <span class="text-xs text-gray-700 font-medium">Choose PNG Images</span>
-                                <input type="file" class="hidden" accept="image/png" multiple
-                                    @change="handleFiles($event)">
-                            </label>
+                    <label class="block font-semibold mb-1">Interior & Exterior Images</label>
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <template x-for="(img, idx) in imagePreview" :key="idx">
+                            <div class="relative">
+                                <img :src="img" class="w-full h-32 object-cover rounded border">
+                                <button type="button" @click="removeImage(idx)"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                                    ×
+                                </button>
+                            </div>
                         </template>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <template x-for="(img, idx) in images" :key="idx">
-                                <div class="relative w-14 h-14">
-                                    <img :src="img" class="object-cover w-14 h-14 rounded border" />
-                                    <button type="button" @click="removeImage(idx)"
-                                        class="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full text-xs px-1 hover:bg-red-500 hover:text-white transition">&times;</button>
-                                </div>
-                            </template>
-                            <template x-if="!images.length">
-                                <template x-for="n in 3" :key="n">
-                                    <div class="w-14 h-14 rounded border bg-gray-100 flex items-center justify-center">
-                                        <img src="https://via.placeholder.com/40x40.png?text=PNG" class="w-10 h-10" />
-                                    </div>
-                                </template>
-                            </template>
-                        </div>
-                        <div class="text-xs text-gray-500 mt-1" x-text="images.length + ' selected (max 6, PNG only)'"></div>
                     </div>
+                    <template x-if="imagePreview.length < 6">
+                        <div>
+                            <input type="file"
+                                   @change="handleFiles($event)"
+                                   accept="image/png"
+                                   multiple
+                                   class="w-full border rounded p-2">
+                            <p class="text-sm text-gray-500 mt-1" x-text="`${imagePreview.length}/6 images selected`"></p>
+                        </div>
+                    </template>
                 </div>
+
+                <!-- Driver Details -->
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver Name</label>
                     <input type="text" x-model="formData.driver_name" class="w-full border rounded px-3 py-2" required>
@@ -137,14 +130,42 @@
                     <label class="block font-semibold mb-1">No of Seats</label>
                     <input type="number" x-model="formData.seats" class="w-full border rounded px-3 py-2" min="1" required>
                 </div>
+
+                <!-- License Section -->
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver License</label>
-                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleLicense" class="w-full" required>
+                    <div class="flex items-center gap-4">
+                        <div class="w-24 h-24 border rounded overflow-hidden">
+                            <img :src="licensePreview || 'https://via.placeholder.com/96?text=License'" class="w-full h-full object-cover" />
+                            <template x-if="licensePreview">
+                                <button @click="removeLicense()"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">×</button>
+                            </template>
+                        </div>
+                        <div class="flex-1">
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleLicense" class="w-full" required>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Bill Book Section -->
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver Bill Book</label>
-                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleBillBook" class="w-full" required>
+                    <div class="flex items-center gap-4">
+                        <div class="w-24 h-24 border rounded overflow-hidden">
+                            <img :src="billBookPreview || 'https://via.placeholder.com/96?text=Bill+Book'" class="w-full h-full object-cover" />
+                            <template x-if="billBookPreview">
+                                <button @click="removeBillBook()"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">×</button>
+                            </template>
+                        </div>
+                        <div class="flex-1">
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleBillBook" class="w-full" required>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Features Section -->
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Bus Features</label>
                     <div class="flex flex-wrap gap-2">
@@ -165,16 +186,17 @@
                 <button type="submit"
                     class="px-4 py-2 rounded bg-black text-white"
                     @click="submitForm"
-                    :disabled="images.length < 6"
-                    :class="images.length < 6 ? 'opacity-50 cursor-not-allowed' : ''"
-                >Add Bus</button>
+                    :disabled="imagePreview.length === 0"
+                    :class="imagePreview.length === 0 ? 'opacity-50 cursor-not-allowed' : ''">
+                    Add Bus
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Edit Modal -->
-    <div x-show="showEditModal" 
-         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" 
+    <div x-show="showEditModal"
+         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
          style="display: none;">
         <div @click.away="showEditModal = false"
              class="bg-white rounded-lg shadow-lg w-full max-w-lg relative flex flex-col max-h-[90vh]">
@@ -199,6 +221,30 @@
                     <input type="text" x-model="formDataEdit.number_plate" class="w-full border rounded px-3 py-2" required>
                 </div>
                 <div class="mb-3">
+                    <label class="block font-semibold mb-1">Interior & Exterior Images</label>
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <template x-for="(img, idx) in imagePreview" :key="idx">
+                            <div class="relative">
+                                <img :src="img" class="w-full h-32 object-cover rounded border">
+                                <button type="button" @click="removeImage(idx)"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                                    ×
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                    <template x-if="imagePreview.length < 6">
+                        <div>
+                            <input type="file"
+                                   @change="handleFiles($event)"
+                                   accept="image/png"
+                                   multiple
+                                   class="w-full border rounded p-2">
+                            <p class="text-sm text-gray-500 mt-1" x-text="`${imagePreview.length}/6 images selected`"></p>
+                        </div>
+                    </template>
+                </div>
+                <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver Name</label>
                     <input type="text" x-model="formDataEdit.driver_name" class="w-full border rounded px-3 py-2" required>
                 </div>
@@ -209,24 +255,32 @@
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver License</label>
                     <div class="flex items-center gap-4">
-                        <div class="w-24 h-24 border rounded overflow-hidden">
+                        <div class="w-24 h-24 border rounded overflow-hidden relative">
                             <img :src="licensePreview" class="w-full h-full object-cover" />
+                            <template x-if="licensePreview">
+                                <button @click="removeLicense()"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">×</button>
+                            </template>
                         </div>
                         <div class="flex-1">
                             <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleLicense" class="w-full">
-                            <p class="text-xs text-gray-500 mt-1">Current file: <span x-text="formData.driver_license"></span></p>
+                            <p class="text-xs text-gray-500 mt-1">Current file: <span x-text="formDataEdit.driver_license"></span></p>
                         </div>
                     </div>
                 </div>
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver Bill Book</label>
                     <div class="flex items-center gap-4">
-                        <div class="w-24 h-24 border rounded overflow-hidden">
+                        <div class="w-24 h-24 border rounded overflow-hidden relative">
                             <img :src="billBookPreview" class="w-full h-full object-cover" />
+                            <template x-if="billBookPreview">
+                                <button @click="removeBillBook()"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">×</button>
+                            </template>
                         </div>
                         <div class="flex-1">
                             <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleBillBook" class="w-full">
-                            <p class="text-xs text-gray-500 mt-1">Current file: <span x-text="formData.driver_bill_book"></span></p>
+                            <p class="text-xs text-gray-500 mt-1">Current file: <span x-text="formDataEdit.driver_bill_book"></span></p>
                         </div>
                     </div>
                 </div>
@@ -292,6 +346,7 @@ function busModal() {
         selectedFeatures: [],
         licensePreview: '',
         billBookPreview: '',
+        imagePreview: [],
         async init() {
             try {
                 const standardsResponse = await fetch('/admin/bus-standards');
@@ -309,16 +364,49 @@ function busModal() {
         },
         handleFiles(event) {
             const files = Array.from(event.target.files)
-                .filter(f => f.type === 'image/png')
-                .slice(0, 6 - this.images.length);
+                .filter(f => f.type === 'image/png');
 
-            if (files.length) {
-                this.images = [...this.images, ...files];
-                this.formData.images = this.images;
+            const totalImages = this.imagePreview.length + files.length;
+            if (totalImages > 6) {
+                alert('Maximum 6 images allowed. You can add ' + (6 - this.imagePreview.length) + ' more image(s)');
+                event.target.value = '';
+                return;
             }
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    this.images.push(file);
+                    this.imagePreview.push(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            this.formData.images = this.images;
         },
         removeImage(idx) {
             this.images.splice(idx, 1);
+            this.imagePreview.splice(idx, 1);
+            this.formData.images = this.images;
+            this.formDataEdit.images = this.images;
+        },
+        handleImageUpload(event) {
+            const files = event.target.files;
+            if (files) {
+                const remainingSlots = 6 - this.imagePreview.length;
+                const filesToAdd = Array.from(files).slice(0, remainingSlots);
+
+                filesToAdd.forEach(file => {
+                    if (file.type === 'image/png') {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            this.imagePreview.push(e.target.result);
+                            this.formData.images.push(file);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
         },
         toggleFeature(feature) {
             if (this.selectedFeatures.includes(feature.id)) {
@@ -328,9 +416,56 @@ function busModal() {
             }
             this.formData.features = this.selectedFeatures;
         },
+        handleLicense(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    this.licensePreview = e.target.result;
+                    if (this.isEditing) {
+                        this.formDataEdit.driver_license = file;
+                    } else {
+                        this.formData.driver_license = file;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+        handleBillBook(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    this.billBookPreview = e.target.result;
+                    if (this.isEditing) {
+                        this.formDataEdit.driver_bill_book = file;
+                    } else {
+                        this.formData.driver_bill_book = file;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+        removeLicense() {
+            this.licensePreview = '';
+            this[this.isEditing ? 'formDataEdit' : 'formData'].driver_license = null;
+            const licenseInput = document.querySelector('input[accept=".pdf,.jpg,.jpeg,.png"]');
+            if (licenseInput) licenseInput.value = '';
+        },
+        removeBillBook() {
+            this.billBookPreview = '';
+            this[this.isEditing ? 'formDataEdit' : 'formData'].driver_bill_book = null;
+            const billBookInput = document.querySelectorAll('input[accept=".pdf,.jpg,.jpeg,.png"]')[1];
+            if (billBookInput) billBookInput.value = '';
+        },
         async submitForm() {
-            if (this.images.length < 6) {
-                alert('Please select at least 6 PNG images.');
+            if (this.formData.images.length === 0) {
+                alert('Please select at least 1 image');
+                return;
+            }
+
+            if (this.formData.images.length > 6) {
+                alert('Maximum 6 images are allowed');
                 return;
             }
 
@@ -343,19 +478,20 @@ function busModal() {
             formData.append('driver_name', this.formData.driver_name);
             formData.append('features', JSON.stringify(this.selectedFeatures));
 
-            // Handle files explicitly
-            const licenseFile = document.querySelector('input[type="file"][accept=".pdf,.jpg,.jpeg,.png"]').files[0];
-            const billBookFile = document.querySelectorAll('input[type="file"][accept=".pdf,.jpg,.jpeg,.png"]')[1].files[0];
-
-            formData.append('driver_license', licenseFile);
-            formData.append('driver_bill_book', billBookFile);
+            // Handle files properly
+            if (this.formData.driver_license) {
+                formData.append('driver_license', this.formData.driver_license);
+            }
+            if (this.formData.driver_bill_book) {
+                formData.append('driver_bill_book', this.formData.driver_bill_book);
+            }
 
             // Handle images
-            this.images.forEach((file, index) => {
-                if (file instanceof File) {
+            if (this.images.length > 0) {
+                this.images.forEach((file, index) => {
                     formData.append(`images[${index}]`, file);
-                }
-            });
+                });
+            }
 
             try {
                 const response = await fetch('/admin/buses', {
@@ -403,18 +539,15 @@ function busModal() {
             formDataEdit.append('driver_name', this.formDataEdit.driver_name);
             formDataEdit.append('features', JSON.stringify(this.selectedFeatures));
 
-            // Handle file uploads only if new files are selected
-            const licenseFile = document.querySelector('input[type="file"][accept=".pdf,.jpg,.jpeg,.png"]').files[0];
-            const billBookFile = document.querySelectorAll('input[type="file"][accept=".pdf,.jpg,.jpeg,.png"]')[1].files[0];
-
-            if (licenseFile) {
-                formDataEdit.append('driver_license', licenseFile);
+            // Handle files properly
+            if (this.formDataEdit.driver_license instanceof File) {
+                formDataEdit.append('driver_license', this.formDataEdit.driver_license);
             }
-            if (billBookFile) {
-                formDataEdit.append('driver_bill_book', billBookFile);
+            if (this.formDataEdit.driver_bill_book instanceof File) {
+                formDataEdit.append('driver_bill_book', this.formDataEdit.driver_bill_book);
             }
 
-            // Handle images only if new ones are selected
+            // Handle images
             if (this.images.some(img => img instanceof File)) {
                 this.images.forEach((file, index) => {
                     if (file instanceof File) {
@@ -464,6 +597,7 @@ function busModal() {
                 features: []
             };
             this.images = [];
+            this.imagePreview = [];
             this.selectedFeatures = [];
             this.isEditing = false;
             this.editId = null;
@@ -497,6 +631,7 @@ function busModal() {
         },
         openEditModal(bus) {
             this.resetForm();
+            this.isEditing = true; // Set editing mode
             this.formDataEdit = {
                 name: bus.name,
                 standard_id: bus.standard_id.toString(),
@@ -505,11 +640,19 @@ function busModal() {
                 driver_name: bus.driver_name,
                 driver_license: bus.driver_license,
                 driver_bill_book: bus.driver_bill_book,
-                images: bus.images,
-                features: bus.features
+                images: bus.images || [],
+                features: bus.features || []
             };
-            this.selectedFeatures = bus.features;
-            this.images = bus.images.map(img => `/storage/${img}`);
+
+            // Set selected features from bus data
+            this.selectedFeatures = Array.isArray(bus.features) ? bus.features : [];
+
+            // Setup image previews
+            if (Array.isArray(bus.images)) {
+                this.imagePreview = bus.images.map(img => `/storage/${img}`);
+                this.images = bus.images;
+            }
+
             this.licensePreview = `/storage/${bus.driver_license}`;
             this.billBookPreview = `/storage/${bus.driver_bill_book}`;
             this.editId = bus.id;
@@ -517,6 +660,7 @@ function busModal() {
         },
         openAddModal() {
             this.resetForm();
+            this.isEditing = false; // Set adding mode
             this.showAddModal = true;
         }
     }

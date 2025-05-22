@@ -26,7 +26,19 @@
 
                 <!-- Card Content -->
                 <div class="mt-6">
-                    <form action="#" method="POST" class="space-y-4">
+                    <form method="POST" action="{{ route('login.submit') }}" class="space-y-4 mt-[-12px] mb-6">
+                        @csrf
+
+                        @if ($errors->any())
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                                <ul class="list-disc list-inside text-red-600">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <!-- Email Field -->
                         <div class="space-y-2">
                             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>

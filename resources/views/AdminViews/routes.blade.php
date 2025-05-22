@@ -185,15 +185,22 @@
 
                 <div>
                     <label class="block text-sm font-medium mb-1">Status</label>
-                    <select name="status"
-                            x-model="routeForm.status"
-                            class="w-full border rounded px-3 py-2 @error('status') border-red-500 @enderror">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
-                    @error('status')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
+                    <div class="flex gap-4">
+                        <label class="flex items-center">
+                            <input type="radio"
+                                   x-model="routeForm.status"
+                                   value="1"
+                                   class="mr-2">
+                            Active
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio"
+                                   x-model="routeForm.status"
+                                   value="0"
+                                   class="mr-2">
+                            Inactive
+                        </label>
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-2 mt-6">
@@ -239,7 +246,7 @@ function routesManager() {
             to: '',
             distance: '',
             duration: '',
-            status: 'active',
+            status: '1', // Default to active
             image: null
         },
         notification: {
@@ -318,13 +325,21 @@ function routesManager() {
             }
 
             const url = this.editingRoute
-                ? `/route/${this.editingRoute.id}`
-                : '{{ route('route.save') }}';
+                ? `/admin/routes/${this.editingRoute.id}`
+                : '/admin/routes';
+
+            const method = this.editingRoute ? 'PUT' : 'POST';
+
+            if (this.editingRoute) {
+                formData.append('_method', 'PUT');
+            }
 
             fetch(url, {
-                method: 'POST',
+                method: this.editingRoute ? 'POST' : 'POST', // Using POST with _method for PUT
                 body: formData,
-                credentials: 'same-origin'
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                }
             })
             .then(async response => {
                 const data = await response.json();
@@ -371,10 +386,12 @@ function routesManager() {
         },
         confirmDelete() {
             const routeId = this.deleteModal.routeId;
-            fetch(`/route/${routeId}`, {
+            fetch(`/admin/routes/${routeId}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 }
             })
             .then(response => response.json())

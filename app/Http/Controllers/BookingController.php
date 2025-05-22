@@ -58,4 +58,32 @@ class BookingController extends Controller
             'redirect' => route('booking.reservation', $scheduleId)
         ]);
     }
+
+    public function generateTicket($bookingId)
+    {
+        $booking = Booking::with(['schedule', 'user'])->findOrFail($bookingId);
+
+        if ($booking->user_id !== session('user_id')) {
+            return redirect()->route('mybooking')
+                ->with('error', 'Unauthorized access');
+        }
+
+        $ticket = Ticket::create([
+            'user_id' => $booking->user_id,
+            'booking_id' => $booking->id,
+            'schedule_id' => $booking->schedule_id,
+            'ticket_number' => 'TKT-' . strtoupper(uniqid()),
+            'status' => 'active',
+            'total_amount' => $booking->total_amount
+        ]);
+
+        return redirect()->route('ticket.show', $ticket->id)
+            ->with('success', 'Ticket generated successfully');
+    }
+
+    public function showTicket($id)
+    {
+        $ticket = Ticket::with(['booking', 'user'])->findOrFail($id);
+        return view('ticket', compact('ticket'));
+    }
 }

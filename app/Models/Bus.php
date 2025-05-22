@@ -21,11 +21,11 @@ class Bus extends Model
 
     protected $casts = [
         'images' => 'array',
-        'features' => 'array'
+        'features' => 'array'  // Cast features as array for JSON storage
     ];
 
     public function standard(): BelongsTo
     {
-        return $this->belongsTo(BusStandard::class, 'standard_id');  // Changed from bus_standard_id
+        return $this->belongsTo(BusStandard::class);
     }
 }

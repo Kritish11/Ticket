@@ -7,44 +7,64 @@ use App\Models\Bus;
 use App\Models\BusStandard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class BusController extends Controller
 {
     public function index()
     {
-        $buses = Bus::with(['standard'])->latest()->get();
-        $standards = BusStandard::all();
-        $features = \App\Models\BusFeature::all(); // Add this line
-        return view('AdminViews.buses', compact('buses', 'standards', 'features'));
+        try {
+            // Ensure features are loaded with the bus data
+            $buses = Bus::with(['standard'])->latest()->get()->map(function($bus) {
+                $bus->features = is_array($bus->features) ? $bus->features : [];
+                $bus->images = is_array($bus->images) ? $bus->images : [];
+                return $bus;
+            });
+            $features = \App\Models\BusFeature::all();
+            $standards = BusStandard::all();
+
+            return view('AdminViews.buses', compact('buses', 'features', 'standards'));
+        } catch (\Exception $e) {
+            Log::error('Error fetching buses: ' . $e->getMessage());
+            return view('AdminViews.buses')->with('error', 'Error loading buses');
+        }
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'standard_id' => 'required|exists:bus_standards,id',
-            'number_plate' => 'required|string|unique:buses',
-            'seats' => 'required|integer|min:1',
-            'driver_name' => 'required|string',
-            'driver_license' => 'required|file|mimes:pdf,jpg,jpeg,png',
-            'driver_bill_book' => 'required|file|mimes:pdf,jpg,jpeg,png',
-            'images' => 'required|array|size:6',
-            'images.*' => 'required|image|mimes:png',
-            'features' => 'required|json'
-        ]);
-
         try {
-            // Handle driver documents first
+            $validated = $request->validate([
+                'name' => 'required|string',
+                'standard_id' => 'required|exists:bus_standards,id',
+                'number_plate' => 'required|string|unique:buses',
+                'seats' => 'required|integer|min:1',
+                'driver_name' => 'required|string',
+                'driver_license' => 'required|file|mimes:pdf,jpg,jpeg,png',
+                'driver_bill_book' => 'required|file|mimes:pdf,jpg,jpeg,png',
+                'images' => 'required|array|min:1|max:6',
+                'images.*' => 'required|image|mimes:png',
+                'features' => 'required'
+            ]);
+
+            // Handle images first
+            $images = [];
+            if ($request->hasFile('images')) {
+                $imageCount = count($request->file('images'));
+                if ($imageCount > 6) {
+                    throw new \Exception('Maximum 6 images are allowed. You provided ' . $imageCount);
+                }
+
+                foreach ($request->file('images') as $image) {
+                    $images[] = $image->store('bus-images', 'public');
+                }
+            }
+
+            // Handle file uploads
             $licensePath = $request->file('driver_license')->store('driver-docs', 'public');
             $billBookPath = $request->file('driver_bill_book')->store('driver-docs', 'public');
 
-            // Handle image uploads
-            $images = [];
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('bus-images', 'public');
-                $images[] = $path;
-            }
-
+            // Create bus with JSON features
             $bus = Bus::create([
                 'name' => $validated['name'],
                 'standard_id' => $validated['standard_id'],
@@ -54,15 +74,17 @@ class BusController extends Controller
                 'driver_license' => $licensePath,
                 'driver_bill_book' => $billBookPath,
                 'images' => $images,
-                'features' => json_decode($validated['features'], true)
+                'features' => json_decode($request->features) // Store features as JSON
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Bus added successfully',
-                'bus' => $bus
+                'bus' => $bus->load('standard')
             ]);
+
         } catch (\Exception $e) {
+            Log::error('Bus creation failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error adding bus: ' . $e->getMessage()
@@ -102,11 +124,19 @@ class BusController extends Controller
                 $updateData['driver_bill_book'] = $request->file('driver_bill_book')->store('driver-docs', 'public');
             }
 
-            // Handle images
+            // Handle images if new ones are provided
             if ($request->hasFile('images')) {
-                foreach ($bus->images as $oldImage) {
+                $imageCount = count($request->file('images'));
+                if ($imageCount > 6) {
+                    throw new \Exception('Maximum 6 images are allowed. You provided ' . $imageCount);
+                }
+
+                // Delete old images
+                foreach ($bus->images ?? [] as $oldImage) {
                     Storage::disk('public')->delete($oldImage);
                 }
+
+                // Store new images
                 $images = [];
                 foreach ($request->file('images') as $image) {
                     $images[] = $image->store('bus-images', 'public');
@@ -187,6 +217,35 @@ class BusController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching buses: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getBusesList()
+    {
+        try {
+            $buses = Bus::with('standard')
+                ->select('id', 'name', 'number_plate', 'standard_id', 'seats')
+                ->get()
+                ->map(function($bus) {
+                    return [
+                        'id' => $bus->id,
+                        'name' => $bus->name,
+                        'number_plate' => $bus->number_plate,
+                        'seats' => $bus->seats,
+                        'standard' => optional($bus->standard)->name ?? 'N/A'
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'buses' => $buses
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching buses: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching buses'
             ], 500);
         }
     }

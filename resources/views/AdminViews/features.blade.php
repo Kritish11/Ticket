@@ -164,15 +164,55 @@ function featuresManager() {
             this.loadStandards();
         },
 
+        addFeature() {
+            const formData = {
+                name: this.newFeature.name,
+                description: this.newFeature.description
+            };
+
+            fetch('/admin/features', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    this.features.push(result.data);
+                    this.closeFeatureModal();
+                    this.showNotification('Feature added successfully', 'success');
+                    // Reload features to get fresh data
+                    this.loadFeatures();
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.showNotification(error.message || 'Failed to add feature', 'error');
+            });
+        },
+
         loadFeatures() {
             fetch('/admin/features')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
                 .then(data => {
-                    this.features = data.features || [];
+                    if (data.success) {
+                        this.features = data.features;
+                    } else {
+                        throw new Error(data.message || 'Failed to load features');
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading features:', error);
-                    this.showNotification('Error loading features', 'error');
+                    this.showNotification('Error loading features: ' + error.message, 'error');
                 });
         },
 
@@ -188,52 +228,15 @@ function featuresManager() {
                 });
         },
 
-        addFeature() {
-            const data = {
-                name: this.newFeature.name,
-                description: this.newFeature.description
-            };
-
-            fetch('/feature_add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    this.features.push(result.data);
-                    this.newFeature = { name: '', description: '' };
-                    this.showFeatureModal = false;
-                    this.featureError = null;
-                } else {
-                    this.featureError = result.message;
-                }
-            })
-            .catch(error => {
-                this.featureError = 'Error adding feature. Please try again.';
-                console.error('Error:', error);
-            });
-        },
-
         addStandard() {
-            const data = {
-                name: this.newStandard.name,
-                description: this.newStandard.description
-            };
-
-            fetch('/standard_add', {
+            fetch('/admin/standards', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(this.newStandard)
             })
             .then(response => response.json())
             .then(result => {
@@ -243,12 +246,12 @@ function featuresManager() {
                     this.showStandardModal = false;
                     this.showNotification('Standard added successfully', 'success');
                 } else {
-                    this.showNotification(result.message, 'error');
+                    throw new Error(result.message || 'Failed to add standard');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                this.showNotification('Error adding standard', 'error');
+                this.showNotification(error.message || 'Error adding standard', 'error');
             });
         },
 
@@ -261,7 +264,7 @@ function featuresManager() {
         confirmDelete() {
             const id = this.itemToDelete;
             const type = this.itemTypeToDelete;
-            const endpoint = type === 'feature' ? `/feature/${id}` : `/standard/${id}`;
+            const endpoint = type === 'feature' ? `/admin/features/${id}` : `/admin/standards/${id}`;
 
             fetch(endpoint, {
                 method: 'DELETE',

@@ -246,9 +246,14 @@
                             </div>
                         </div>
                         <div class="bg-gray-50 p-6 border-t border-gray-200">
-                            <button type="submit" class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors">
-                              <a href="/"></a>  Confirm Booking
-                            </button>
+                            <form action="{{ route('booking.complete') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="schedule_id" value="{{ $schedule->id }}">
+                                <input type="hidden" name="seats" value="{{ json_encode($selectedSeats) }}">
+                                <button type="submit" class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors">
+                                    Confirm Booking
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

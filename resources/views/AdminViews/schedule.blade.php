@@ -180,6 +180,49 @@
         </table>
     </div>
 
+    <!-- Add Modal -->
+    <div x-show="showAddModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div @click.away="showAddModal = false" class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Add New Schedule</h3>
+                <button @click="showAddModal = false" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+
+            <form @submit.prevent="submitSchedule" class="space-y-4">
+                <!-- Route Selection -->
+                <div class="mb-4">
+                    <label class="block font-medium mb-1">Select Route</label>
+                    <select x-model="formData.route_id"
+                            @change="loadAvailableBuses()"
+                            class="w-full border rounded px-3 py-2"
+                            required>
+                        <option value="">Choose a route</option>
+                        <template x-for="route in routes" :key="route.id">
+                            <option :value="route.id"
+                                    x-text="`${route.from} to ${route.to} (${route.duration})`">
+                            </option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Bus Selection -->
+                <div class="mb-4">
+                    <label class="block font-medium mb-1">Select Bus</label>
+                    <select x-model="formData.bus_id"
+                            class="w-full border rounded px-3 py-2"
+                            required>
+                        <option value="">Choose a bus</option>
+                        <template x-for="bus in buses" :key="bus.id">
+                            <option :value="bus.id"
+                                    x-text="`${bus.name} (${bus.number_plate}) - ${bus.standard}`">
+                            </option>
+                        </template>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Add/Edit Schedule Modal -->
     <div x-show="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
         <div @click.away="showModal = false" class="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
@@ -190,6 +233,17 @@
 
             <form @submit.prevent="editingSchedule ? updateForm() : saveSchedule()" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
+                    <!-- Bus Selection -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Select Bus</label>
+                        <select x-model="scheduleForm.busId" class="w-full border rounded px-3 py-2" required>
+                            <option value="">Select a Bus</option>
+                            <template x-for="bus in availableBuses" :key="bus.id">
+                                <option :value="bus.id" x-text="`${bus.name} - ${bus.number_plate} (${bus.type})`"></option>
+                            </template>
+                        </select>
+                    </div>
+
                     <!-- Route Selection -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Route</label>
@@ -197,17 +251,6 @@
                             <option value="">Select Route</option>
                             <template x-for="route in routes" :key="route.id">
                                 <option :value="route.id" x-text="`${route.from} → ${route.to}`"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <!-- Bus Selection -->
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Bus</label>
-                        <select x-model="scheduleForm.busId" class="w-full border rounded px-3 py-2" required>
-                            <option value="">Select Bus</option>
-                            <template x-for="bus in availableBuses" :key="bus.id">
-                                <option :value="bus.id" x-text="bus.name"></option>
                             </template>
                         </select>
                     </div>
@@ -353,6 +396,7 @@
 function scheduleManager() {
     return {
         showModal: false,
+        showAddModal: false,
         showStatusModal: false,
         showDeleteModal: false,
         searchTerm: '',
@@ -376,6 +420,10 @@ function scheduleManager() {
                 duration: 30
             }
         },
+        formData: {
+            route_id: '',
+            bus_id: '',
+        },
         statusForm: {
             status: 'upcoming',
             delay: 0,
@@ -383,16 +431,46 @@ function scheduleManager() {
         },
         routes: [],
         buses: [],
+        availableBuses: [],
         schedules: [],
         async init() {
             try {
-                // Load all data first
-                await this.loadAllData();
-
-                // Setup auto-refresh every 30 seconds
-                setInterval(() => this.loadAllData(), 30000);
+                // Load routes and buses when component initializes
+                await Promise.all([
+                    this.loadRoutes(),
+                    this.loadBuses()
+                ]);
+                console.log('Component initialized');
             } catch (error) {
-                console.error('Error in init:', error);
+                console.error('Error initializing:', error);
+            }
+        },
+        async loadRoutes() {
+            try {
+                const response = await fetch('/admin/routes/active');
+                const data = await response.json();
+                if (data.success) {
+                    this.routes = data.routes;
+                    console.log('Loaded routes:', this.routes);
+                } else {
+                    console.error('Failed to load routes:', data.message);
+                }
+            } catch (error) {
+                console.error('Error loading routes:', error);
+            }
+        },
+        async loadBuses() {
+            try {
+                const response = await fetch('/admin/buses/list');
+                const data = await response.json();
+                if (data.success) {
+                    this.buses = data.buses;
+                    console.log('Loaded buses:', this.buses);
+                } else {
+                    console.error('Failed to load buses:', data.message);
+                }
+            } catch (error) {
+                console.error('Error loading buses:', error);
             }
         },
         async loadAllData() {
@@ -427,6 +505,23 @@ function scheduleManager() {
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
+            }
+        },
+        async loadAvailableBuses() {
+            if (!this.formData.route_id) {
+                this.availableBuses = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/routes/${this.formData.route_id}/available-buses`);
+                const data = await response.json();
+                if (data.success) {
+                    this.availableBuses = data.buses;
+                    this.formData.bus_id = ''; // Reset bus selection
+                }
+            } catch (error) {
+                console.error('Error loading available buses:', error);
             }
         },
         get filteredSchedules() {

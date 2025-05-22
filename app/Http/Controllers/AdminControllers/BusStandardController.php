@@ -9,24 +9,32 @@ use Illuminate\Support\Facades\Log;
 
 class BusStandardController extends Controller
 {
-    public function getStandards()
-    {
-        $standards = BusStandard::all();
-        return response()->json([
-            'success' => true,
-            'standards' => $standards
-        ]);
-    }
-
-    public function addStandard(Request $request)
+    public function index()
     {
         try {
-            $validatedData = $request->validate([
+            $standards = BusStandard::all();
+            return response()->json([
+                'success' => true,
+                'standards' => $standards
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching standards: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching standards'
+            ], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'required|string|max:1000',
+                'description' => 'required|string'
             ]);
 
-            $standard = BusStandard::create($validatedData);
+            $standard = BusStandard::create($validated);
 
             return response()->json([
                 'success' => true,
@@ -37,12 +45,12 @@ class BusStandardController extends Controller
             Log::error('Standard creation failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error adding standard: ' . $e->getMessage()
+                'message' => 'Failed to add standard'
             ], 500);
         }
     }
 
-    public function deleteStandard($id)
+    public function destroy($id)
     {
         try {
             $standard = BusStandard::findOrFail($id);
@@ -56,7 +64,7 @@ class BusStandardController extends Controller
             Log::error('Standard deletion failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting standard: ' . $e->getMessage()
+                'message' => 'Failed to delete standard'
             ], 500);
         }
     }
