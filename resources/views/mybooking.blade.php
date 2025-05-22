@@ -48,6 +48,12 @@
 @include('partials.header')
 
 <body class="bg-gray-50">
+    @if(!session('is_logged_in'))
+        <script>
+            window.location.href = "{{ route('login') }}";
+        </script>
+    @endif
+
     <div class="min-h-screen py-28">
         <div class="container mx-auto px-4">
             <h1 class="text-2xl md:text-3xl font-bold mb-8">My Bookings</h1>

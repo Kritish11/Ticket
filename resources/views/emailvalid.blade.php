@@ -30,66 +30,49 @@
                 </div>
 
                 <div class="p-6 space-y-4">
-                    <div class="flex justify-center py-4 gap-3">
-                        <input
-                            type="text"
-                            maxlength="1"
-                            id="otp1"
-                            class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            oninput="if(this.value.length === 1) document.getElementById('otp2').focus()"
-                            onkeydown="if(event.key === 'Backspace' && this.value.length === 0) document.getElementById('otp1').focus()"
-                        />
-                        <input
-                            type="text"
-                            maxlength="1"
-                            id="otp2"
-                            class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            oninput="if(this.value.length === 1) document.getElementById('otp3').focus()"
-                            onkeydown="if(event.key === 'Backspace' && this.value.length === 0) document.getElementById('otp1').focus()"
-                        />
-                        <input
-                            type="text"
-                            maxlength="1"
-                            id="otp3"
-                            class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            oninput="if(this.value.length === 1) document.getElementById('otp4').focus()"
-                            onkeydown="if(event.key === 'Backspace' && this.value.length === 0) document.getElementById('otp2').focus()"
-                        />
-                        <input
-                            type="text"
-                            maxlength="1"
-                            id="otp4"
-                            class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            oninput="if(this.value.length === 1) document.getElementById('otp5').focus()"
-                            onkeydown="if(event.key === 'Backspace' && this.value.length === 0) document.getElementById('otp3').focus()"
-                        />
-                        <input
-                            type="text"
-                            maxlength="1"
-                            id="otp5"
-                            class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            oninput="if(this.value.length === 1) document.getElementById('otp6').focus()"
-                            onkeydown="if(event.key === 'Backspace' && this.value.length === 0) document.getElementById('otp4').focus()"
-                        />
-                        <input
-                            type="text"
-                            maxlength="1"
-                            id="otp6"
-                            class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            onkeydown="if(event.key === 'Backspace' && this.value.length === 0) document.getElementById('otp5').focus()"
-                        />
-                    </div>
+                    @if (session('error'))
+                        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+                            {{ session('error') }}
+                        </div>
+                    @endif
 
-                    <div class="text-center text-sm text-gray-500">
-                        Didn't receive a code?
-                        <a href="#" class="text-blue-600 hover:underline font-medium">Resend Code</a>
-                    </div>
+                    @if (session('success'))
+                        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('verify.otp') }}" method="POST" class="space-y-4">
+                        @csrf
+                        <!-- Single hidden input to store combined OTP -->
+                        <input type="hidden" name="otp" id="combinedOtp">
+
+                        <div class="flex justify-center py-4 gap-3">
+                            @for ($i = 1; $i <= 6; $i++)
+                                <input
+                                    type="text"
+                                    maxlength="1"
+                                    id="otp{{ $i }}"
+                                    class="h-12 w-12 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    oninput="moveToNext(this, {{ $i }})"
+                                    onkeydown="handleBackspace(this, event, {{ $i }})"
+                                    required
+                                />
+                            @endfor
+                        </div>
+                        <button type="submit" class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors">
+                            Verify Email
+                        </button>
+                    </form>
+
+                    <form action="{{ route('resend.otp') }}" method="POST" class="text-center text-sm text-gray-500">
+                        @csrf
+                        <span>Didn't receive a code?</span>
+                        <button type="submit" class="text-blue-600 hover:underline font-medium">Resend Code</button>
+                    </form>
                 </div>
 
                 <div class="p-6 flex flex-col gap-2">
-                    <button class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors">
-                        Verify Email
-                    </button>
                     <a href="/signup" class="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-100 transition-colors">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -100,6 +83,30 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function moveToNext(current, index) {
+            if (current.value.length === 1 && index < 6) {
+                document.getElementById('otp' + (index + 1)).focus();
+            }
+            combineOtp();
+        }
+
+        function handleBackspace(current, event, index) {
+            if (event.key === 'Backspace' && current.value.length === 0 && index > 1) {
+                document.getElementById('otp' + (index - 1)).focus();
+            }
+            combineOtp();
+        }
+
+        function combineOtp() {
+            let otp = '';
+            for (let i = 1; i <= 6; i++) {
+                otp += document.getElementById('otp' + i).value;
+            }
+            document.getElementById('combinedOtp').value = otp;
+        }
+    </script>
 
     @include('partials.footer')
 </body>

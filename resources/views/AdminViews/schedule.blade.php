@@ -315,9 +315,9 @@
                     <label class="block text-sm font-medium mb-2">
                         Reason <span class="text-gray-500">(optional)</span>
                     </label>
-                    <textarea 
-                        x-model="statusForm.reason" 
-                        rows="3" 
+                    <textarea
+                        x-model="statusForm.reason"
+                        rows="3"
                         class="w-full border rounded px-3 py-2"
                         placeholder="Enter reason (optional)"></textarea>
                 </div>
@@ -571,42 +571,71 @@ function scheduleManager() {
                 delay: schedule.delay || 0,
                 reason: schedule.reason || ''
             };
-            console.log('Current status form:', this.statusForm); // Debug log
             this.showStatusModal = true;
         },
         saveStatus() {
-            if (this.selectedSchedule) {
-                const statusData = {
-                    status: this.statusForm.status,
-                    delay_minutes: this.statusForm.status === 'delayed' ? this.statusForm.delay : 0,
-                    status_reason: this.statusForm.reason || null // Allow null for empty reason
-                };
+            if (!this.selectedSchedule) return;
 
-                fetch(`/admin/schedules/${this.selectedSchedule.id}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(statusData)
-                })
-                .then(response => response.json())
-                .then(async data => {
-                    if (data.success) {
-                        await this.loadAllData();
-                        this.showStatusModal = false;
-                        this.selectedSchedule = null;
-                        alert('Status updated successfully');
-                    } else {
-                        alert(data.message || 'Failed to update status');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to update status');
-                });
+            // Validate delay for delayed status
+            if (this.statusForm.status === 'delayed' && (!this.statusForm.delay || this.statusForm.delay < 1)) {
+                alert('Please enter a valid delay duration');
+                return;
             }
+
+            const statusData = {
+                status: this.statusForm.status,
+                delay_minutes: this.statusForm.status === 'delayed' ? parseInt(this.statusForm.delay) : 0,
+                status_reason: this.statusForm.reason || ''
+            };
+
+            // Debug logging
+            console.log('Updating status:', {
+                scheduleId: this.selectedSchedule.id,
+                data: statusData
+            });
+
+            fetch(`/admin/schedules/${this.selectedSchedule.id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(statusData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update local schedule data
+                    const index = this.schedules.findIndex(s => s.id === this.selectedSchedule.id);
+                    if (index !== -1) {
+                        this.schedules[index] = {
+                            ...this.schedules[index],
+                            status: statusData.status,
+                            delay: statusData.delay_minutes,
+                            reason: statusData.status_reason
+                        };
+                    }
+
+                    this.showStatusModal = false;
+                    this.selectedSchedule = null;
+                    alert('Status updated successfully');
+
+                    // Refresh data to ensure consistency
+                    this.loadAllData();
+                } else {
+                    throw new Error(data.message || 'Failed to update status');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                alert('Failed to update status: ' + error.message);
+            });
         },
         confirmDelete(schedule) {
             this.scheduleToDelete = schedule;

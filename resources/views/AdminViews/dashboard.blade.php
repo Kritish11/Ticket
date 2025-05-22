@@ -116,7 +116,7 @@
                             <div>
                                 <div class="font-medium" x-text="trip.route"></div>
                                 <div class="text-sm text-gray-500">
-                                    <span x-text="trip.departureDate"></span> at 
+                                    <span x-text="trip.departureDate"></span> at
                                     <span x-text="trip.departureTime"></span>
                                 </div>
                                 <div class="text-xs text-gray-400" x-text="trip.busName"></div>
@@ -124,6 +124,11 @@
                             <div class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">On Time</div>
                         </div>
                     </template>
+                    <div x-show="hasMoreTrips.upcoming" class="text-center mt-4">
+                        <button @click="activeSection = 'schedule'" class="text-sm text-blue-600 hover:text-blue-800">
+                            View all upcoming trips →
+                        </button>
+                    </div>
                 </div>
 
                 <div x-show="activeTab === 'Delayed'" class="space-y-4">
@@ -132,7 +137,7 @@
                             <div>
                                 <div class="font-medium" x-text="trip.route"></div>
                                 <div class="text-sm text-gray-500">
-                                    <span x-text="trip.departureDate"></span> at 
+                                    <span x-text="trip.departureDate"></span> at
                                     <span x-text="trip.departureTime"></span>
                                 </div>
                                 <div class="text-xs text-gray-400" x-text="trip.busName"></div>
@@ -145,6 +150,11 @@
                             </div>
                         </div>
                     </template>
+                    <div x-show="hasMoreTrips.delayed" class="text-center mt-4">
+                        <button @click="activeSection = 'schedule'" class="text-sm text-blue-600 hover:text-blue-800">
+                            View all delayed trips →
+                        </button>
+                    </div>
                 </div>
 
                 <div x-show="activeTab === 'Cancelled'" class="space-y-4">
@@ -153,7 +163,7 @@
                             <div>
                                 <div class="font-medium" x-text="trip.route"></div>
                                 <div class="text-sm text-gray-500">
-                                    <span x-text="trip.departureDate"></span> at 
+                                    <span x-text="trip.departureDate"></span> at
                                     <span x-text="trip.departureTime"></span>
                                 </div>
                                 <div class="text-xs text-gray-400" x-text="trip.busName"></div>
@@ -164,6 +174,11 @@
                             </div>
                         </div>
                     </template>
+                    <div x-show="hasMoreTrips.cancelled" class="text-center mt-4">
+                        <button @click="activeSection = 'schedule'" class="text-sm text-blue-600 hover:text-blue-800">
+                            View all cancelled trips →
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,7 +280,7 @@ function dashboard() {
         selectedPeriod: 'last30',
         activeTab: 'Upcoming',
         schedules: [],
-        
+
         async init() {
             await this.fetchSchedules();
             // Auto refresh every 5 minutes
@@ -285,15 +300,32 @@ function dashboard() {
         },
 
         get upcomingTrips() {
-            return this.schedules.filter(s => s.status === 'upcoming');
+            return this.schedules
+                .filter(s => s.status === 'upcoming')
+                .sort((a, b) => new Date(a.departureDate + ' ' + a.departureTime) - new Date(b.departureDate + ' ' + b.departureTime))
+                .slice(0, 3);
         },
 
         get delayedTrips() {
-            return this.schedules.filter(s => s.status === 'delayed');
+            return this.schedules
+                .filter(s => s.status === 'delayed')
+                .sort((a, b) => b.delay - a.delay)
+                .slice(0, 3);
         },
 
         get cancelledTrips() {
-            return this.schedules.filter(s => s.status === 'cancelled');
+            return this.schedules
+                .filter(s => s.status === 'cancelled')
+                .sort((a, b) => new Date(b.departureDate + ' ' + b.departureTime) - new Date(a.departureDate + ' ' + a.departureTime))
+                .slice(0, 3);
+        },
+
+        get hasMoreTrips() {
+            return {
+                upcoming: this.schedules.filter(s => s.status === 'upcoming').length > 3,
+                delayed: this.schedules.filter(s => s.status === 'delayed').length > 3,
+                cancelled: this.schedules.filter(s => s.status === 'cancelled').length > 3
+            };
         },
 
         recentBookings: [

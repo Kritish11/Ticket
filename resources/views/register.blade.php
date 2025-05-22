@@ -24,15 +24,28 @@
 
                 <!-- Card Content -->
                 <div class="mt-6">
-                    <form action="#" method="POST" class="space-y-4">
+                    <form action="{{ route('register') }}" method="POST" class="space-y-4">
+                        @csrf
+                        <!-- Error Messages -->
+                        @if ($errors->any())
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                                <ul class="text-red-800">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <!-- Full Name Field -->
                         <div class="space-y-2">
-                            <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
                             <div class="relative">
                                 <input
-                                    id="fullName"
+                                    id="name"
                                     type="text"
-                                    name="fullName"
+                                    name="name"
+                                    value="{{ old('name') }}"
                                     placeholder="John Doe"
                                     class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                                     required
@@ -116,12 +129,12 @@
 
                         <!-- Confirm Password Field -->
                         <div class="space-y-2">
-                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
                             <div class="relative">
                                 <input
-                                    id="confirmPassword"
+                                    id="password_confirmation"
                                     type="password"
-                                    name="confirmPassword"
+                                    name="password_confirmation"
                                     placeholder="••••••••"
                                     class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                                     required
@@ -187,7 +200,7 @@
         }
 
         function toggleConfirmPasswordVisibility() {
-            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const confirmPasswordInput = document.getElementById('password_confirmation');
             const confirmEyeIcon = document.getElementById('confirm-eye-icon');
             const confirmEyeOffIcon = document.getElementById('confirm-eye-off-icon');
 

@@ -19,6 +19,12 @@
     </style>
 </head>
 <body class="bg-gray-50">
+    @if(!session('is_logged_in'))
+        <script>
+            window.location.href = "{{ route('login') }}";
+        </script>
+    @endif
+
     @include('partials.header')
     <div class="pt-24 pb-12">
         <div class="container mx-auto px-4">
@@ -213,10 +219,11 @@
                                     <p class="text-gray-800">2025-04-28</p>
                                 </div>
                                 <div class="border-t border-gray-200 pt-4 mt-4">
-                                    <p class="font-medium mb-2">Selected Seats (2)</p>
+                                    <p class="font-medium mb-2">Selected Seats ({{ count($selectedSeats) }})</p>
                                     <div class="flex flex-wrap gap-2">
-                                        <div class="bg-gray-100 px-2 py-1 rounded-md text-sm">1A</div>
-                                        <div class="bg-gray-100 px-2 py-1 rounded-md text-sm">3C</div>
+                                        @foreach($selectedSeats as $seat)
+                                            <div class="bg-gray-100 px-2 py-1 rounded-md text-sm">{{ $seat }}</div>
+                                        @endforeach
                                     </div>
                                 </div>
                                 <div class="border-t border-gray-200 pt-4 mt-4">

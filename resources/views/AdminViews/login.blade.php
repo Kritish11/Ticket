@@ -1,4 +1,3 @@
-<!-- filepath: c:\Users\mightymouse\OneDrive - oxfordcollege.edu.np\Desktop\My web\busTicket\resources\views\AdminViews\login.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,13 +11,33 @@
 <body class="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-gray-50">
     <div class="w-full max-w-md">
         <div class="bg-white shadow-lg rounded-lg">
+            <!-- Session Messages -->
+            @if (session('error'))
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if (session('success'))
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <div class="p-6 space-y-1">
                 <h2 class="text-2xl font-bold text-center">Admin Login</h2>
                 <p class="text-gray-500 text-center">Enter your admin credentials to access the dashboard</p>
             </div>
             <div class="p-6">
-                <form method="POST" class="space-y-4 mt-[-12px] mb-6">
+                <form method="POST" action="{{ route('admin.login.submit') }}" class="space-y-4 mt-[-12px] mb-6">
                     @csrf
+
+                    @if ($errors->any())
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                            <p class="text-red-800">{{ $errors->first() }}</p>
+                        </div>
+                    @endif
+
                     <div class="space-y-2">
                         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                         <div class="relative">
@@ -26,7 +45,8 @@
                                 id="email"
                                 type="email"
                                 name="email"
-                                placeholder="name@example.com"
+                                value="{{ old('email') }}"
+                                placeholder="ticketsewa@gmail.com"
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                                 required
                             />

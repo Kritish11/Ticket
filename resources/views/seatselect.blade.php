@@ -37,6 +37,12 @@
     </style>
 </head>
 <body>
+    @if(!session('is_logged_in'))
+        <div class="fixed top-20 right-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-lg z-50">
+            Please <a href="{{ route('login') }}" class="underline font-medium">login</a> to book tickets.
+        </div>
+    @endif
+
     @include('partials.header')
     <div class="min-h-screen bg-gray-50 py-12">
         <div class="container mx-auto px-4">
@@ -363,6 +369,44 @@
                 proceedButton.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
+
+        // Add form submission logic
+        document.getElementById('proceed-button').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (!selectedSeats.length) {
+                alert('Please select at least one seat');
+                return;
+            }
+
+            // If user is not logged in, redirect to login
+            @if(!session('is_logged_in'))
+                window.location.href = "{{ route('login') }}";
+                return;
+            @endif
+
+            // Send selected seats to server
+            fetch("{{ route('booking.store-seats', $schedule->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    seats: selectedSeats
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to process seat selection');
+            });
+        });
     </script>
     @include('partials.footer')
 </body>
