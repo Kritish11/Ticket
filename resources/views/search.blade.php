@@ -177,22 +177,25 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <!-- Break Time -->
                                         @if(isset($schedule['food_break']))
-                                        <div>
-                                            <h4 class="font-medium text-sm mb-2">Break Time</h4>
-                                            <p class="text-sm text-gray-600">
-                                                {{ $schedule['food_break']['time'] }} - {{ $schedule['food_break']['duration'] }} min at {{ $schedule['food_break']['location'] }}
-                                            </p>
-                                        </div>
+                                            <div>
+                                                <h4 class="font-medium text-sm mb-2">Break Time</h4>
+                                                <p class="text-sm text-gray-600">
+                                                    {{ $schedule['food_break']['time'] }} - {{ $schedule['food_break']['duration'] }} min at {{ $schedule['food_break']['location'] }}
+                                                </p>
+                                            </div>
                                         @endif
 
                                         <!-- Features -->
                                         <div>
                                             <h4 class="font-medium text-sm mb-2">Features</h4>
                                             <div class="flex flex-wrap gap-2">
-                                                @foreach($schedule['features'] ?? [] as $feature)
-                                                <div class="flex items-center bg-white py-1 px-2 rounded text-xs">
-                                                    {{ $feature }}
-                                                </div>
+                                                @foreach($schedule['features'] as $feature)
+                                                    <div class="flex items-center bg-white py-1 px-2 rounded text-xs">
+                                                        <svg class="h-4 w-4 mr-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                        </svg>
+                                                        {{ $feature }}
+                                                    </div>
                                                 @endforeach
                                             </div>
                                         </div>

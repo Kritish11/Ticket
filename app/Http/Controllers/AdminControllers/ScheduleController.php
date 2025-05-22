@@ -209,6 +209,9 @@ class ScheduleController extends Controller
             $toLocation = $request->input('to');
             $date = $request->input('date');
 
+            // Load bus features for mapping
+            $busFeatures = \App\Models\BusFeature::pluck('name', 'id')->toArray();
+
             $schedules = Schedule::with(['route', 'bus.standard'])
                 ->whereHas('route', function($query) use ($fromLocation, $toLocation) {
                     if ($fromLocation) {
@@ -223,7 +226,23 @@ class ScheduleController extends Controller
                 })
                 ->where('status', '!=', 'cancelled')
                 ->get()
-                ->map(function($schedule) {
+                ->map(function($schedule) use ($busFeatures) {
+                    // Handle features mapping
+                    $features = [];
+                    if ($schedule->bus->features) {
+                        // Check if features is already an array or needs decoding
+                        $featureIds = is_array($schedule->bus->features) 
+                            ? $schedule->bus->features 
+                            : json_decode($schedule->bus->features, true);
+                        
+                        if ($featureIds) {
+                            $features = array_map(function($featureId) use ($busFeatures) {
+                                return $busFeatures[$featureId] ?? null;
+                            }, $featureIds);
+                            $features = array_filter($features); // Remove null values
+                        }
+                    }
+
                     return [
                         'id' => $schedule->id,
                         'route' => $schedule->route->from . ' → ' . $schedule->route->to,
@@ -233,8 +252,9 @@ class ScheduleController extends Controller
                         'departure_time' => $schedule->departure_time->format('H:i'),
                         'duration' => $schedule->duration,
                         'price' => $schedule->price,
-                        'seats_available' => $schedule->bus->seats, // You might want to calculate actual available seats
-                        'status' => $schedule->status
+                        'seats_available' => $schedule->bus->seats,
+                        'status' => $schedule->status,
+                        'features' => $features
                     ];
                 });
 
