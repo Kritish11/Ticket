@@ -201,4 +201,58 @@ class ScheduleController extends Controller
             ], 500);
         }
     }
+
+    public function searchSchedules(Request $request)
+    {
+        try {
+            $fromLocation = $request->input('from');
+            $toLocation = $request->input('to');
+            $date = $request->input('date');
+
+            $schedules = Schedule::with(['route', 'bus.standard'])
+                ->whereHas('route', function($query) use ($fromLocation, $toLocation) {
+                    if ($fromLocation) {
+                        $query->where('from', $fromLocation);
+                    }
+                    if ($toLocation) {
+                        $query->where('to', $toLocation);
+                    }
+                })
+                ->when($date, function($query) use ($date) {
+                    return $query->whereDate('departure_date', $date);
+                })
+                ->where('status', '!=', 'cancelled')
+                ->get()
+                ->map(function($schedule) {
+                    return [
+                        'id' => $schedule->id,
+                        'route' => $schedule->route->from . ' → ' . $schedule->route->to,
+                        'bus' => $schedule->bus->name,
+                        'bus_type' => $schedule->bus->standard->name,
+                        'departure_date' => $schedule->departure_date->format('Y-m-d'),
+                        'departure_time' => $schedule->departure_time->format('H:i'),
+                        'duration' => $schedule->duration,
+                        'price' => $schedule->price,
+                        'seats_available' => $schedule->bus->seats, // You might want to calculate actual available seats
+                        'status' => $schedule->status
+                    ];
+                });
+
+            $fromLocations = BusRoute::distinct('from')->pluck('from')->sort()->values();
+            $toLocations = BusRoute::distinct('to')->pluck('to')->sort()->values();
+
+            return view('search', [
+                'schedules' => $schedules,
+                'fromLocation' => $fromLocation,
+                'toLocation' => $toLocation,
+                'date' => $date,
+                'fromLocations' => $fromLocations,
+                'toLocations' => $toLocations
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Schedule search failed: ' . $e->getMessage());
+            return view('search')->with('error', 'Error searching schedules');
+        }
+    }
 }

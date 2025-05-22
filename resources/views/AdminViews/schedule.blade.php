@@ -206,7 +206,7 @@
                         <label class="block text-sm font-medium mb-1">Bus</label>
                         <select x-model="scheduleForm.busId" class="w-full border rounded px-3 py-2" required>
                             <option value="">Select Bus</option>
-                            <template x-for="bus in availableBuses" :key="bus.id">
+                            <template x-for="bus in buses" :key="bus.id">
                                 <option :value="bus.id" x-text="bus.name"></option>
                             </template>
                         </select>
