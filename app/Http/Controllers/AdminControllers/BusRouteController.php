@@ -19,8 +19,11 @@ class BusRouteController extends Controller
                 'distance' => 'required|numeric',
                 'status' => 'required',
                 'routeImage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'duration' => 'required|string|max:255',
+                // Remove duration validation - it's now optional
             ]);
+
+            // Set default empty value for duration if not provided
+            $validatedData['duration'] = $request->input('duration', '');
 
             // Convert status to boolean
             $validatedData['status'] = $validatedData['status'] == '1';
@@ -112,8 +115,11 @@ class BusRouteController extends Controller
                 'distance' => 'required|numeric',
                 'status' => 'required|in:0,1',
                 'routeImage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'duration' => 'required|string|max:255',
+                // Remove duration validation - it's now optional
             ]);
+
+            // Set duration from request or keep existing
+            $validatedData['duration'] = $request->input('duration', '');
 
             $route = BusRoute::findOrFail($id);
 

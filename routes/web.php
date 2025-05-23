@@ -130,6 +130,11 @@ Route::get('/search', [ScheduleController::class, 'searchSchedules'])->name('sch
 //     ->middleware('user.auth')
 //     ->name('booking.complete');
 
+Route::get('/booking/seats/{id}', [\App\Http\Controllers\BookingController::class, 'showSeatSelection'])->name('booking.seats');
+Route::get('/booking/reservation/{id}', [\App\Http\Controllers\BookingController::class, 'showReservation'])->name('booking.reservation');
+Route::post('/booking/seats/{id}', [\App\Http\Controllers\BookingController::class, 'storeSelectedSeats'])->name('booking.seats.store');
+Route::post('/booking/complete', [\App\Http\Controllers\BookingController::class, 'completeBooking'])->name('booking.complete');
+
 // Admin guest routes (accessible without login)
 Route::get('/adminlogin', function() {
     if (session()->has('is_admin')) {

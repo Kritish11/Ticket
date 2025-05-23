@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('from');
             $table->string('to');
             $table->decimal('distance', 8, 2);
-            $table->string('duration');
+            $table->string('duration')->nullable();
             $table->boolean('status')->default(true);
             $table->string('routeImage')->nullable();
             $table->timestamps();

@@ -164,7 +164,7 @@
                                         <div class="flex flex-col items-center md:items-end mt-4 md:mt-0">
                                             <p class="text-xl font-bold mb-2">₹{{ $schedule['price'] }}</p>
                                             <p class="text-sm text-gray-600 mb-2">{{ $schedule['seats_available'] }} seats left</p>
-                                            <a href="#" 
+                                            <a href="{{ route('booking.seats', ['id' => $schedule['id']]) }}" 
                                                class="w-full md:w-32 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 text-center">
                                                 Select Bus
                                             </a>

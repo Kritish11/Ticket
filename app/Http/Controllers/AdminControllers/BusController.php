@@ -14,21 +14,6 @@ class BusController extends Controller
 {
     public function index()
     {
-        // try {
-        //     // Ensure features are loaded with the bus data
-        //     $buses = Bus::with(['standard'])->latest()->get()->map(function($bus) {
-        //         $bus->features = is_array($bus->features) ? $bus->features : [];
-        //         $bus->images = is_array($bus->images) ? $bus->images : [];
-        //         return $bus;
-        //     });
-        //     $features = \App\Models\BusFeature::all();
-        //     $standards = BusStandard::all();
-
-        //     return view('AdminViews.buses', compact('buses', 'features', 'standards'));
-        // } catch (\Exception $e) {
-        //     Log::error('Error fetching buses: ' . $e->getMessage());
-        //     return view('AdminViews.buses')->with('error', 'Error loading buses');
-        // }
         try {
             $buses = Bus::with('standard')->get();
             return response()->json([
@@ -52,14 +37,13 @@ class BusController extends Controller
                 'number_plate' => 'required|string|unique:buses',
                 'seats' => 'required|integer|min:1',
                 'driver_name' => 'required|string',
-                'driver_license' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'driver_bill_book' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'images' => 'required|array|min:1|max:6',
-                'images.*' => 'required|image|mimes:png',
+                'driver_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'driver_bill_book' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'images.*' => 'required|image|mimes:png,jpg,jpeg|max:2048',
                 'features' => 'required'
             ]);
 
-            // Handle images first
+            // Handle images
             $images = [];
             if ($request->hasFile('images')) {
                 $imageCount = count($request->file('images'));
@@ -68,7 +52,10 @@ class BusController extends Controller
                 }
 
                 foreach ($request->file('images') as $image) {
-                    $images[] = $image->store('bus-images', 'public');
+                    // Generate unique filename
+                    $filename = uniqid('bus_') . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('bus-images', $filename, 'public');
+                    $images[] = $path;
                 }
             }
 
@@ -136,7 +123,14 @@ class BusController extends Controller
                 $updateData['driver_bill_book'] = $request->file('driver_bill_book')->store('driver-docs', 'public');
             }
 
-            // Handle images if new ones are provided
+            // Validate new images if provided
+            if ($request->hasFile('images')) {
+                $request->validate([
+                    'images.*' => 'required|image|mimes:png,jpg,jpeg|max:2048',
+                ]);
+            }
+
+            // Handle new images
             if ($request->hasFile('images')) {
                 $imageCount = count($request->file('images'));
                 if ($imageCount > 6) {
@@ -148,10 +142,11 @@ class BusController extends Controller
                     Storage::disk('public')->delete($oldImage);
                 }
 
-                // Store new images
                 $images = [];
                 foreach ($request->file('images') as $image) {
-                    $images[] = $image->store('bus-images', 'public');
+                    $filename = uniqid('bus_') . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('bus-images', $filename, 'public');
+                    $images[] = $path;
                 }
                 $updateData['images'] = $images;
             }

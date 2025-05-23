@@ -98,27 +98,53 @@
                 <!-- Images Section -->
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Interior & Exterior Images</label>
-                    <div class="grid grid-cols-3 gap-4 mb-4">
+
+                    <!-- Image Preview Grid -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
                         <template x-for="(img, idx) in imagePreview" :key="idx">
-                            <div class="relative">
-                                <img :src="img" class="w-full h-32 object-cover rounded border">
-                                <button type="button" @click="removeImage(idx)"
-                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
-                                    ×
-                                </button>
+                            <div class="relative group">
+                                <img :src="img" class="w-full h-32 object-cover rounded-lg shadow-sm border border-gray-200">
+                                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center">
+                                    <button type="button" @click="removeImage(idx)"
+                                        class="bg-white text-red-500 rounded-full p-2 hover:bg-red-50 transition-colors duration-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </template>
+
+                        <!-- Upload Button -->
+                        <template x-if="imagePreview.length < 6">
+                            <label class="cursor-pointer relative">
+                                <div class="h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-sm text-gray-500 mt-2">Add Image</span>
+                                </div>
+                                <input type="file"
+                                       @change="handleFiles($event)"
+                                       accept="image/png,image/jpeg,image/jpg"
+                                       multiple
+                                       class="hidden">
+                            </label>
+                        </template>
                     </div>
-                    <template x-if="imagePreview.length < 6">
-                        <div>
-                            <input type="file"
-                                   @change="handleFiles($event)"
-                                   accept="image/png"
-                                   multiple
-                                   class="w-full border rounded p-2">
-                            <p class="text-sm text-gray-500 mt-1" x-text="`${imagePreview.length}/6 images selected`"></p>
+
+                    <!-- Status and Help Text -->
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                            </svg>
+                            <span x-text="`${imagePreview.length}/6 images uploaded`"></span>
                         </div>
-                    </template>
+                        <div class="text-xs">
+                            Accepted formats: PNG, JPEG, JPG (max 2MB)
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Driver Details -->
@@ -135,15 +161,38 @@
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver License</label>
                     <div class="flex items-center gap-4">
-                        <div class="w-24 h-24 border rounded overflow-hidden">
-                            <img :src="licensePreview || 'https://via.placeholder.com/96?text=License'" class="w-full h-full object-cover" />
+                        <div class="relative w-24 h-24">
+                            <template x-if="!licensePreview">
+                                <label class="cursor-pointer w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-xs text-gray-500 mt-1">Add License</span>
+                                </label>
+                            </template>
                             <template x-if="licensePreview">
-                                <button @click="removeLicense()"
-                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">×</button>
+                                <div class="relative w-full h-full">
+                                    <img :src="licensePreview" class="w-full h-full object-cover rounded-lg shadow-sm" />
+                                    <button @click.prevent="removeLicense()"
+                                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors duration-200 shadow-lg">
+                                        ×
+                                    </button>
+                                </div>
                             </template>
                         </div>
                         <div class="flex-1">
-                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleLicense" class="w-full" required>
+                            <input type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                @change="handleLicense"
+                                class="block w-full text-sm text-gray-500
+                                    file:mr-4 file:py-2 file:px-4
+                                    file:rounded-full file:border-0
+                                    file:text-sm file:font-semibold
+                                    file:bg-gray-50 file:text-gray-700
+                                    hover:file:bg-gray-100
+                                    cursor-pointer"
+                                required>
+                            <p class="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, JPEG, PNG</p>
                         </div>
                     </div>
                 </div>
@@ -152,15 +201,38 @@
                 <div class="mb-3">
                     <label class="block font-semibold mb-1">Driver Bill Book</label>
                     <div class="flex items-center gap-4">
-                        <div class="w-24 h-24 border rounded overflow-hidden">
-                            <img :src="billBookPreview || 'https://via.placeholder.com/96?text=Bill+Book'" class="w-full h-full object-cover" />
+                        <div class="relative w-24 h-24">
+                            <template x-if="!billBookPreview">
+                                <label class="cursor-pointer w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-xs text-gray-500 mt-1">Add Bill Book</span>
+                                </label>
+                            </template>
                             <template x-if="billBookPreview">
-                                <button @click="removeBillBook()"
-                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">×</button>
+                                <div class="relative w-full h-full">
+                                    <img :src="billBookPreview" class="w-full h-full object-cover rounded-lg shadow-sm" />
+                                    <button @click.prevent="removeBillBook()"
+                                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors duration-200 shadow-lg">
+                                        ×
+                                    </button>
+                                </div>
                             </template>
                         </div>
                         <div class="flex-1">
-                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="handleBillBook" class="w-full" required>
+                            <input type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                @change="handleBillBook"
+                                class="block w-full text-sm text-gray-500
+                                    file:mr-4 file:py-2 file:px-4
+                                    file:rounded-full file:border-0
+                                    file:text-sm file:font-semibold
+                                    file:bg-gray-50 file:text-gray-700
+                                    hover:file:bg-gray-100
+                                    cursor-pointer"
+                                required>
+                            <p class="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, JPEG, PNG</p>
                         </div>
                     </div>
                 </div>
@@ -237,10 +309,14 @@
                         <div>
                             <input type="file"
                                    @change="handleFiles($event)"
-                                   accept="image/png"
+                                   accept="image/png,image/jpeg,image/jpg"
                                    multiple
                                    class="w-full border rounded p-2">
-                            <p class="text-sm text-gray-500 mt-1" x-text="`${imagePreview.length}/6 images selected`"></p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                <span x-text="`${imagePreview.length}/6 images selected`"></span>
+                                <br>
+                                <span class="text-xs">Accepted formats: PNG, JPEG, JPG</span>
+                            </p>
                         </div>
                     </template>
                 </div>
@@ -363,17 +439,34 @@ function busModal() {
             }
         },
         handleFiles(event) {
-            const files = Array.from(event.target.files)
-                .filter(f => f.type === 'image/png');
+            const files = Array.from(event.target.files);
 
-            const totalImages = this.imagePreview.length + files.length;
+            // Validate file types and size
+            const validFiles = files.filter(file => {
+                const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+                const maxSize = 2 * 1024 * 1024; // 2MB
+
+                if (!validTypes.includes(file.type)) {
+                    alert(`File ${file.name} is not a valid image type. Please use PNG, JPG or JPEG.`);
+                    return false;
+                }
+
+                if (file.size > maxSize) {
+                    alert(`File ${file.name} is too large. Maximum size is 2MB.`);
+                    return false;
+                }
+
+                return true;
+            });
+
+            const totalImages = this.imagePreview.length + validFiles.length;
             if (totalImages > 6) {
                 alert('Maximum 6 images allowed. You can add ' + (6 - this.imagePreview.length) + ' more image(s)');
                 event.target.value = '';
                 return;
             }
 
-            files.forEach(file => {
+            validFiles.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = e => {
                     this.images.push(file);
@@ -383,6 +476,11 @@ function busModal() {
             });
 
             this.formData.images = this.images;
+
+            // Clear input if no valid files were selected
+            if (validFiles.length === 0) {
+                event.target.value = '';
+            }
         },
         removeImage(idx) {
             this.images.splice(idx, 1);
@@ -397,7 +495,7 @@ function busModal() {
                 const filesToAdd = Array.from(files).slice(0, remainingSlots);
 
                 filesToAdd.forEach(file => {
-                    if (file.type === 'image/png') {
+                    if (['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
                         const reader = new FileReader();
                         reader.onload = e => {
                             this.imagePreview.push(e.target.result);

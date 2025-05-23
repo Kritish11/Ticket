@@ -76,7 +76,7 @@
                         <td class="px-6 py-4" x-text="route.from"></td>
                         <td class="px-6 py-4" x-text="route.to"></td>
                         <td class="px-6 py-4" x-text="route.distance + ' km'"></td>
-                        <td class="px-6 py-4" x-text="route.duration"></td>
+                        <td class="px-6 py-4" x-text="route.duration || 'Not fixed'"></td>
                         <td class="px-6 py-4">
                             <span :class="route.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
                                 class="px-2 py-1 rounded-full text-xs font-medium"
@@ -145,13 +145,23 @@
                                required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Duration</label>
-                        <input type="text"
-                               name="duration"
-                               x-model="routeForm.duration"
-                               placeholder="e.g. 8 hours"
-                               class="w-full border rounded px-3 py-2 @error('duration') border-red-500 @enderror"
-                               required>
+                        <label class="block text-sm font-medium mb-1">Status</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input type="radio"
+                                       x-model="routeForm.status"
+                                       value="1"
+                                       class="mr-2">
+                                Active
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio"
+                                       x-model="routeForm.status"
+                                       value="0"
+                                       class="mr-2">
+                                Inactive
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -180,26 +190,6 @@
                                 <path d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Status</label>
-                    <div class="flex gap-4">
-                        <label class="flex items-center">
-                            <input type="radio"
-                                   x-model="routeForm.status"
-                                   value="1"
-                                   class="mr-2">
-                            Active
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio"
-                                   x-model="routeForm.status"
-                                   value="0"
-                                   class="mr-2">
-                            Inactive
-                        </label>
                     </div>
                 </div>
 
@@ -245,7 +235,6 @@ function routesManager() {
             from: '',
             to: '',
             distance: '',
-            duration: '',
             status: '1', // Default to active
             image: null
         },
@@ -300,7 +289,6 @@ function routesManager() {
                 from: route.from,
                 to: route.to,
                 distance: route.distance,
-                duration: route.duration,
                 status: route.status === 'active' ? '1' : '0',
                 image: route.image ? `/storage/${route.image}` : null
             };
@@ -310,18 +298,15 @@ function routesManager() {
             e.preventDefault();
             const formData = new FormData();
 
-            // Append form data
+            // Remove duration from required fields, make it optional
             formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
             formData.append('from', this.routeForm.from);
             formData.append('to', this.routeForm.to);
             formData.append('distance', this.routeForm.distance);
-            formData.append('duration', this.routeForm.duration);
             formData.append('status', this.routeForm.status);
-
-            // Handle file input
-            const fileInput = e.target.querySelector('input[type="file"]');
-            if (fileInput && fileInput.files[0]) {
-                formData.append('routeImage', fileInput.files[0]);
+            // Make duration optional
+            if (this.routeForm.duration) {
+                formData.append('duration', this.routeForm.duration);
             }
 
             const url = this.editingRoute
@@ -382,10 +367,6 @@ function routesManager() {
         },
         deleteRoute(routeId) {
             this.deleteModal.routeId = routeId;
-            this.deleteModal.show = true;
-        },
-        confirmDelete() {
-            const routeId = this.deleteModal.routeId;
             fetch(`/admin/routes/${routeId}`, {
                 method: 'DELETE',
                 headers: {
@@ -421,7 +402,6 @@ function routesManager() {
                 from: '',
                 to: '',
                 distance: '',
-                duration: '',
                 status: '1',
                 image: null
             };

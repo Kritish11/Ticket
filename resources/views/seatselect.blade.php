@@ -4,242 +4,267 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Select Seats - TicketSewa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>TicketSewa - Book Your Journey</title>
-    <style>
-        .bus-seat {
-            width: 2rem;
-            height: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .bus-seat-available {
-            background-color: #e5e7eb;
-            color: #374151;
-        }
-        .bus-seat-available:hover {
-            background-color: #d1d5db;
-        }
-        .bus-seat-selected {
-            background-color: #2563eb;
-            color: #ffffff;
-        }
-        .bus-seat-booked {
-            background-color: #9ca3af;
-            color: #ffffff;
-            cursor: not-allowed;
-        }
-    </style>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
-    @if(!session('is_logged_in'))
-        <div class="fixed top-20 right-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-lg z-50">
-            Please <a href="{{ route('login') }}" class="underline font-medium">login</a> to book tickets.
-        </div>
-    @endif
-
+<body class="bg-gray-50">
     @include('partials.header')
-    <div class="min-h-screen bg-gray-50 py-12">
+
+    <div class="min-h-screen pt-24">
         <div class="container mx-auto px-4">
-            <h1 class="text-2xl md:text-3xl font-bold mb-2">Select Your Seats</h1>
-            <p class="text-gray-600 mb-8">
-                Express Deluxe • New York to Chicago • April 28, 2025
-            </p>
+            <!-- Bus Details Header -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Bus Info -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-xl font-bold mb-1">{{ $schedule->bus->name }}</h2>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="bg-black text-white px-2 py-0.5 rounded">{{ $schedule->bus->standard->name }}</span>
+                                    <span class="text-gray-600">{{ $schedule->bus->number_plate }}</span>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Bus Details Section -->
-                <div class="lg:col-span-2 space-y-8">
-                    <!-- Placeholder for BusGallery -->
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h2 class="text-xl font-semibold mb-4">Bus Gallery</h2>
-                        <div class="flex space-x-4 overflow-x-auto">
-                            <img src="https://imgs.search.brave.com/UQdINo_nVnOCSUeJKCCf6zBLdemnynx0hh6U6pMl6wQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvNDY0/Nzg5NTk0L3Bob3Rv/L2ludGVyaW9yLW9m/LWFuLWludGVydXJi/YW4tY29hY2guanBn/P3M9NjEyeDYxMiZ3/PTAmaz0yMCZjPW4w/SHF1WDA4U2dOeXV2/YllmbWRabFk5UzA3/RWRkbGUtd3ZNSXZm/SG1US0k9" alt="Bus Image 1" class="h-48 rounded-md">
-                            <img src="https://imgs.search.brave.com/-Fj8rSk6jjOGPAzBcNztv3BDiKFH-xNlpRv3eSE62go/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvODg5/NDQ2NzUwL3Bob3Rv/L2ludGVyaW9yLW9m/LXRoZS1idXMuanBn/P3M9NjEyeDYxMiZ3/PTAmaz0yMCZjPVRB/MWZ2VVpCaFUtX29r/cVpBZmV3YjZIb3V6/UFpqclVCWEVyaXVt/cHBuUlk9" alt="Bus Image 2" class="h-48 rounded-md">
-                            <img src="https://imgs.search.brave.com/U171QdZhEetBmLX1o-daKLV2MEfT2IKdNgzdk9wQE7I/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvNDgy/NzEyMTM1L3Bob3Rv/L3Bhc3Nlbmdlci1z/ZWF0cy5qcGc_cz02/MTJ4NjEyJnc9MCZr/PTIwJmM9M0NCMlF4/U2ViYUtLMV9fT3BB/Ql9XNzlYekc0RFlS/dWZMWkZQYjkyWGl5/Yz0" alt="Bus Image 3" class="h-48 rounded-md">
-                            <img src="https://imgs.search.brave.com/U171QdZhEetBmLX1o-daKLV2MEfT2IKdNgzdk9wQE7I/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvNDgy/NzEyMTM1L3Bob3Rv/L3Bhc3Nlbmdlci1z/ZWF0cy5qcGc_cz02/MTJ4NjEyJnc9MCZr/PTIwJmM9M0NCMlF4/U2ViYUtLMV9fT3BB/Ql9XNzlYekc0RFlS/dWZMWkZQYjkyWGl5/Yz0" alt="Bus Image 4" class="h-48 rounded-md">
+                        <!-- Staff Info -->
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Driver</p>
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium">{{ $schedule->bus->driver_name }}</p>
+                                    <p class="text-xs text-gray-500">Primary Driver</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Features -->
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-2">Bus Features</p>
+                            <div class="flex flex-wrap gap-2">
+                                @php
+                                    $featureIds = is_array($schedule->bus->features)
+                                        ? $schedule->bus->features
+                                        : json_decode($schedule->bus->features ?? '[]', true);
+                                @endphp
+                                @foreach($featureIds as $featureId)
+                                    @php
+                                        $feature = \App\Models\BusFeature::find($featureId);
+                                    @endphp
+                                    @if($feature)
+                                        <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            {{ $feature->name }}
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Placeholder for JourneyDetails -->
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h2 class="text-xl font-semibold mb-4">Journey Details</h2>
-                        <div class="space-y-4">
+                    <!-- Journey Details -->
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-4">
                             <div>
-                                <p class="font-medium">Driver: John Smith</p>
-                                <p class="font-medium">Co-Driver: Jane Doe</p>
+                                <p class="font-bold text-lg">{{ date('h:i A', strtotime($schedule->departure_time)) }}</p>
+                                <p class="text-gray-600">{{ $schedule->route->from }}</p>
+                            </div>
+                            <div class="flex-1 border-t border-gray-300 relative">
+                                <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-sm text-gray-500">
+                                    {{ $schedule->duration }} hrs
+                                </span>
                             </div>
                             <div>
-                                <p class="font-medium">Stops:</p>
-                                <ul class="list-disc list-inside text-gray-600">
-                                    <li>Albany - 10:30 AM (15 min rest)</li>
-                                    <li>Syracuse - 11:45 AM (30 min meal)</li>
-                                </ul>
+                                <p class="font-bold text-lg">{{ date('h:i A', strtotime($schedule->arrival_time)) }}</p>
+                                <p class="text-gray-600">{{ $schedule->route->to }}</p>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-gray-600">{{ date('D, M d, Y', strtotime($schedule->departure_date)) }}</p>
+                    </div>
+
+                    <!-- Price Info -->
+                    <div class="text-right">
+                        <p class="text-2xl font-bold">Rs.{{ $schedule->price }}</p>
+                        <p class="text-gray-600">per seat</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area with Side Booking -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Left Column: Images and Seat Selection -->
+                <div class="col-span-2 space-y-6">
+                    <!-- Bus Images Slider -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div x-data="imageSlider()" class="w-full">
+                            <!-- Main Image Container with reduced height -->
+                            <div class="relative w-full" style="padding-bottom: 40%;">
+                                <template x-for="(image, index) in images" :key="index">
+                                    <div x-show="currentIndex === index"
+                                        x-transition:enter="transition ease-out duration-300"
+                                        x-transition:enter-start="opacity-0 transform scale-95"
+                                        x-transition:enter-end="opacity-100 transform scale-100"
+                                        x-transition:leave="transition ease-in duration-200"
+                                        x-transition:leave-start="opacity-100 transform scale-100"
+                                        x-transition:leave-end="opacity-0 transform scale-95"
+                                        class="absolute inset-0 rounded-lg overflow-hidden bg-gray-100">
+                                        <img :src="'/storage/' + image"
+                                            class="w-full h-full object-contain"
+                                            :alt="'Bus Image ' + (index + 1)">
+                                    </div>
+                                </template>
+
+                                <!-- Navigation Arrows -->
+                                <button @click="prev()"
+                                        class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-6 h-6 rounded-full flex items-center justify-center transition-all"
+                                        x-show="images.length > 1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                    </svg>
+                                </button>
+                                <button @click="next()"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-6 h-6 rounded-full flex items-center justify-center transition-all"
+                                        x-show="images.length > 1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Thumbnails -->
+                            <div class="mt-2 flex justify-center gap-1">
+                                <template x-for="(image, index) in images" :key="index">
+                                    <button @click="currentIndex = index"
+                                            class="relative flex-shrink-0 w-12 h-12 rounded-md overflow-hidden transition-all"
+                                            :class="currentIndex === index ? 'ring-2 ring-black' : 'opacity-70 hover:opacity-100'">
+                                        <img :src="'/storage/' + image"
+                                            class="w-full h-full object-cover">
+                                    </button>
+                                </template>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Seat Map Section -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="border-b border-gray-100 px-6 py-4">
-                            <h2 class="text-xl font-semibold">Seat Layout</h2>
-                        </div>
-                        <div class="p-6">
-                            <div class="flex justify-between items-center mb-6">
-                                <div class="flex items-center space-x-8">
-                                    <div class="flex items-center">
-                                        <div class="bus-seat bus-seat-available mr-2 w-8 h-8"></div>
-                                        <span class="text-sm">Available</span>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <div class="bus-seat bus-seat-selected mr-2 w-8 h-8"></div>
-                                        <span class="text-sm">Selected</span>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <div class="bus-seat bus-seat-booked mr-2 w-8 h-8"></div>
-                                        <span class="text-sm">Booked</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="relative bg-gray-100 p-6 rounded-lg">
-                                <!-- Bus Front (Driver's Seat) -->
-                                <div class="flex items-center justify-between mb-8">
-                                    <div class="w-20 h-16 bg-gray-200 border border-gray-300 rounded-md flex items-center justify-center">
-                                        <span class="text-sm text-gray-600">Driver</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-sm font-medium">Front</p>
-                                        <div class="w-8 h-8 bg-gray-700 rounded-md ml-auto"></div>
+                    <!-- Seat Selection Area -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold mb-4">Select Seats</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="space-y-8" x-data="seatSelection">
+                                <!-- Driver Section -->
+                                <div class="flex justify-end mb-8">
+                                    <div class="bg-gray-300 p-2 rounded w-16 text-center text-sm">
+                                        Driver
                                     </div>
                                 </div>
 
-                                <!-- Bus Seats -->
-                                <div class="space-y-3">
-                                    <!-- Row 1 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="1A">1A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="1B">1B</button>
+                                <!-- Regular Seats (4 seats per row with aisle) -->
+                                <div class="grid gap-y-4">
+                                    @php
+                                        $totalSeats = $schedule->bus->seats;
+                                        $regularRows = floor(($totalSeats - 5) / 4);
+                                        $currentSeat = 1;
+                                    @endphp
+
+                                    <!-- Regular rows with 4 seats -->
+                                    @for ($row = 1; $row <= $regularRows; $row++)
+                                        <div class="flex justify-between">
+                                            <!-- Left pair -->
+                                            <div class="flex gap-2">
+                                                @for ($i = 1; $i <= 2; $i++)
+                                                    <button
+                                                        class="w-14 h-12 rounded-lg text-center transition-colors text-sm"
+                                                        :class="{
+                                                            'bg-gray-200 hover:bg-gray-300': !selectedSeats.includes({{ $currentSeat }}),
+                                                            'bg-black text-white': selectedSeats.includes({{ $currentSeat }})
+                                                        }"
+                                                        @click="toggleSeat({{ $currentSeat }})">
+                                                        {{ $currentSeat++ }}
+                                                    </button>
+                                                @endfor
+                                            </div>
+
+                                            <!-- Aisle -->
+                                            <div class="w-16"></div>
+
+                                            <!-- Right pair -->
+                                            <div class="flex gap-2">
+                                                @for ($i = 1; $i <= 2; $i++)
+                                                    <button
+                                                        class="w-14 h-12 rounded-lg text-center transition-colors text-sm"
+                                                        :class="{
+                                                            'bg-gray-200 hover:bg-gray-300': !selectedSeats.includes({{ $currentSeat }}),
+                                                            'bg-black text-white': selectedSeats.includes({{ $currentSeat }})
+                                                        }"
+                                                        @click="toggleSeat({{ $currentSeat }})">
+                                                        {{ $currentSeat++ }}
+                                                    </button>
+                                                @endfor
+                                            </div>
                                         </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="1C">1C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="1D">1D</button>
+                                    @endfor
+
+                                    <!-- Last row with 5 seats -->
+                                    <div class="flex justify-between mt-4">
+                                        <!-- Left pair -->
+                                        <div class="flex gap-2">
+                                            @for ($i = 1; $i <= 2; $i++)
+                                                <button
+                                                    class="w-14 h-12 rounded-lg text-center transition-colors text-sm"
+                                                    :class="{
+                                                        'bg-gray-200 hover:bg-gray-300': !selectedSeats.includes({{ $currentSeat }}),
+                                                        'bg-black text-white': selectedSeats.includes({{ $currentSeat }})
+                                                    }"
+                                                    @click="toggleSeat({{ $currentSeat }})">
+                                                    {{ $currentSeat++ }}
+                                                </button>
+                                            @endfor
                                         </div>
-                                    </div>
-                                    <!-- Row 2 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="2A">2A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="2B">2B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="2C">2C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="2D">2D</button>
-                                        </div>
-                                    </div>
-                                    <!-- Row 3 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="3A">3A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="3B">3B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="3C">3C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="3D">3D</button>
-                                        </div>
-                                    </div>
-                                    <!-- Row 4 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="4A">4A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="4B">4B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="4C">4C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="4D">4D</button>
-                                        </div>
-                                    </div>
-                                    <!-- Row 5 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="5A">5A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="5B">5B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="5C">5C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="5D">5D</button>
-                                        </div>
-                                    </div>
-                                    <!-- Row 6 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="6A">6A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="6B">6B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="6C">6C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="6D">6D</button>
-                                        </div>
-                                    </div>
-                                    <!-- Row 7 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="7A">7A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="7B">7B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="7C">7C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="7D">7D</button>
-                                        </div>
-                                    </div>
-                                    <!-- Row 8 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="8A">8A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="8B">8B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="8C">8C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="8D">8D</button>
+
+                                        <!-- Middle seat -->
+                                        <button
+                                            class="w-14 h-12 rounded-lg text-center transition-colors text-sm"
+                                            :class="{
+                                                'bg-gray-200 hover:bg-gray-300': !selectedSeats.includes({{ $currentSeat }}),
+                                                'bg-black text-white': selectedSeats.includes({{ $currentSeat }})
+                                            }"
+                                            @click="toggleSeat({{ $currentSeat }})">
+                                            {{ $currentSeat++ }}
+                                        </button>
+
+                                        <!-- Right pair -->
+                                        <div class="flex gap-2">
+                                            @for ($i = 1; $i <= 2; $i++)
+                                                <button
+                                                    class="w-14 h-12 rounded-lg text-center transition-colors text-sm"
+                                                    :class="{
+                                                        'bg-gray-200 hover:bg-gray-300': !selectedSeats.includes({{ $currentSeat }}),
+                                                        'bg-black text-white': selectedSeats.includes({{ $currentSeat }})
+                                                    }"
+                                                    @click="toggleSeat({{ $currentSeat }})">
+                                                    {{ $currentSeat++ }}
+                                                </button>
+                                            @endfor
                                         </div>
                                     </div>
-                                    <!-- Row 9 -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="9A">9A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="9B">9B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="9C">9C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="9D">9D</button>
-                                        </div>
+                                </div>
+
+                                <!-- Seat Legend -->
+                                <div class="mt-8 flex justify-center gap-4 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                                        <span>Available</span>
                                     </div>
-                                    <!-- Row 10 (Five Seats) -->
-                                    <div class="flex justify-between">
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="10A">10A</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="10B">10B</button>
-                                        </div>
-                                        <div class="w-6"></div>
-                                        <div class="flex space-x-1">
-                                            <button class="bus-seat bus-seat-available" data-seat="10C">10C</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="10D">10D</button>
-                                            <button class="bus-seat bus-seat-available" data-seat="10E">10E</button>
-                                        </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 bg-black rounded"></div>
+                                        <span>Selected</span>
                                     </div>
                                 </div>
                             </div>
@@ -247,51 +272,39 @@
                     </div>
                 </div>
 
-                <!-- Booking Summary Section -->
-                <div>
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="border-b border-gray-100 px-6 py-4">
-                            <h2 class="text-xl font-semibold">Booking Summary</h2>
-                        </div>
-                        <div class="p-6">
+                <!-- Right Column: Booking Summary -->
+                <div class="md:col-span-1">
+                    <div class="bg-white p-6 rounded-lg shadow-md sticky top-24">
+                        <h4 class="font-bold mb-4">Booking Summary</h4>
+                        <div x-data="seatSelection">
                             <div class="space-y-4">
+                                <!-- Selected Seats -->
                                 <div>
-                                    <h3 class="font-semibold text-lg mb-2">Express Deluxe</h3>
-                                    <p class="text-gray-600">AC • Star Travel Co.</p>
+                                    <p class="text-gray-600 mb-1">Selected Seats</p>
+                                    <p class="font-bold" x-text="selectedSeats.join(', ') || 'None'"></p>
                                 </div>
 
-                                <div class="flex justify-between pt-2">
-                                    <div>
-                                        <p class="font-semibold">08:00 AM</p>
-                                        <p class="text-sm text-gray-600">New York</p>
+                                <!-- Price Details -->
+                                <div class="border-t pt-4 space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Price per seat</span>
+                                        <span>₹{{ $schedule->price }}</span>
                                     </div>
-                                    <div>
-                                        <p class="font-semibold">01:30 PM</p>
-                                        <p class="text-sm text-gray-600">Chicago</p>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Number of seats</span>
+                                        <span x-text="selectedSeats.length"></span>
+                                    </div>
+                                    <div class="flex justify-between font-medium border-t pt-2">
+                                        <span>Total Amount</span>
+                                        <span class="text-2xl font-bold" x-text="'₹' + total"></span>
                                     </div>
                                 </div>
 
-                                <div class="pt-2">
-                                    <p class="text-sm font-medium">Journey Date</p>
-                                    <p class="text-gray-800">2025-04-28</p>
-                                </div>
-
-                                <div class="border-t border-gray-200 pt-4 mt-4">
-                                    <p class="font-medium mb-2" id="selected-seats-count">Selected Seats (0)</p>
-                                    <div id="selected-seats-list" class="flex flex-wrap gap-2">
-                                        <p class="text-gray-500 text-sm italic">No seats selected</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 p-6 border-t border-gray-200">
-                            <div class="w-full">
-                                <div class="flex justify-between mb-4">
-                                    <p class="font-medium">Total Amount:</p>
-                                    <p class="font-bold text-xl" id="total-amount">$0.00</p>
-                                </div>
-                                <button id="proceed-button" class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition-colors opacity-50 cursor-not-allowed" disabled>
-                                    <a href="/reservation"> Proceed to Booking</a>
+                                <button
+                                    @click="proceedToBooking()"
+                                    class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    :disabled="selectedSeats.length === 0">
+                                    Continue Booking
                                 </button>
                             </div>
                         </div>
@@ -301,113 +314,42 @@
         </div>
     </div>
 
+    @include('partials.footer')
+
     <script>
-        // Initialize selected seats array
-        let selectedSeats = [];
-
-        // Ticket price per seat
-        const ticketPrice = 45.00;
-
-        // Get DOM elements
-        const seats = document.querySelectorAll('.bus-seat');
-        const selectedSeatsCount = document.getElementById('selected-seats-count');
-        const selectedSeatsList = document.getElementById('selected-seats-list');
-        const totalAmount = document.getElementById('total-amount');
-        const proceedButton = document.getElementById('proceed-button');
-
-        // Add click event listener to each seat
-        seats.forEach(seat => {
-            seat.addEventListener('click', () => {
-                const seatNumber = seat.dataset.seat;
-
-                // Toggle seat selection
-                if (selectedSeats.includes(seatNumber)) {
-                    // Deselect seat
-                    selectedSeats = selectedSeats.filter(s => s !== seatNumber);
-                    seat.classList.remove('bus-seat-selected');
-                    seat.classList.add('bus-seat-available');
-                } else {
-                    // Select seat
-                    selectedSeats.push(seatNumber);
-                    seat.classList.remove('bus-seat-available');
-                    seat.classList.add('bus-seat-selected');
-                }
-
-                // Update booking summary
-                updateBookingSummary();
-            });
-        });
-
-        // Function to update booking summary
-        function updateBookingSummary() {
-            // Update selected seats count
-            selectedSeatsCount.textContent = `Selected Seats (${selectedSeats.length})`;
-
-            // Update selected seats list
-            selectedSeatsList.innerHTML = '';
-            if (selectedSeats.length > 0) {
-                selectedSeats.forEach(seat => {
-                    const seatDiv = document.createElement('div');
-                    seatDiv.className = 'bg-gray-100 px-2 py-1 rounded-md text-sm';
-                    seatDiv.textContent = seat;
-                    selectedSeatsList.appendChild(seatDiv);
-                });
-            } else {
-                selectedSeatsList.innerHTML = '<p class="text-gray-500 text-sm italic">No seats selected</p>';
-            }
-
-            // Update total amount
-            const total = (selectedSeats.length * ticketPrice).toFixed(2);
-            totalAmount.textContent = `$${total}`;
-
-            // Update proceed button state
-            if (selectedSeats.length > 0) {
-                proceedButton.disabled = false;
-                proceedButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else {
-                proceedButton.disabled = true;
-                proceedButton.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        // Add form submission logic
-        document.getElementById('proceed-button').addEventListener('click', function(e) {
-            e.preventDefault();
-
-            if (!selectedSeats.length) {
-                alert('Please select at least one seat');
-                return;
-            }
-
-            // If user is not logged in, redirect to login
-            @if(!session('is_logged_in'))
-                window.location.href = "{{ route('login') }}";
-                return;
-            @endif
-
-            // Send selected seats to server
-            fetch("{{ route('booking.store-seats', $schedule->id) }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('imageSlider', () => ({
+                currentIndex: 0,
+                images: @json(is_array($schedule->bus->images) ? $schedule->bus->images : json_decode($schedule->bus->images ?? '[]', true)),
+                prev() {
+                    this.currentIndex = this.currentIndex === 0 ? this.images.length - 1 : this.currentIndex - 1;
                 },
-                body: JSON.stringify({
-                    seats: selectedSeats
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirect;
+                next() {
+                    this.currentIndex = this.currentIndex === this.images.length - 1 ? 0 : this.currentIndex + 1;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to process seat selection');
-            });
+            }));
+
+            Alpine.data('seatSelection', () => ({
+                selectedSeats: [],
+                price: {{ $schedule->price }},
+                get total() {
+                    return this.selectedSeats.length * this.price;
+                },
+                toggleSeat(seatNumber) {
+                    const index = this.selectedSeats.indexOf(seatNumber);
+                    if (index === -1) {
+                        this.selectedSeats.push(seatNumber);
+                    } else {
+                        this.selectedSeats.splice(index, 1);
+                    }
+                },
+                proceedToBooking() {
+                    if (this.selectedSeats.length > 0) {
+                        window.location.href = `{{ route('booking.reservation', ['id' => $schedule->id]) }}?seats=${this.selectedSeats.join(',')}`;
+                    }
+                }
+            }));
         });
     </script>
-    @include('partials.footer')
 </body>
 </html>

@@ -84,28 +84,7 @@
             </span>
             Features
         </button>
-        <button type="button"
-            @click="activeSection = 'blogs'"
-            :class="activeSection === 'blogs' ? 'bg-gray-100 font-semibold text-black' : 'text-gray-700 hover:bg-gray-50'"
-            class="flex items-center w-full px-4 py-2 rounded-md focus:outline-none">
-            <span class="mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 0 0-1.883 2.542l.857 6a2.25 2.25 0 0 0 2.227 1.932H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-1.883-2.542m-16.5 0V6A2.25 2.25 0 0 1 6 3.75h3.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H18A2.25 2.25 0 0 1 20.25 9v.776" />
-                  </svg>
-            </span>
-            Blog
-        </button>
-        <button type="button"
-            @click="activeSection = 'settings'"
-            :class="activeSection === 'settings' ? 'bg-gray-100 font-semibold text-black' : 'text-gray-700 hover:bg-gray-50'"
-            class="flex items-center w-full px-4 py-2 rounded-md focus:outline-none">
-            <span class="mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077 1.41-.513m14.095-5.13 1.41-.513M5.106 17.785l1.15-.964m11.49-9.642 1.149-.964M7.501 19.795l.75-1.3m7.5-12.99.75-1.3m-6.063 16.658.26-1.477m2.605-14.772.26-1.477m0 17.726-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205 12 12m6.894 5.785-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
-                  </svg>
-            </span>
-            Settings
-        </button>
+
     </nav>
     <!-- Logout Button -->
     <div class="px-2 py-4 border-t border-gray-200">

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Schedule;
 use App\Models\Ticket;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -23,42 +25,80 @@ class BookingController extends Controller
         return view('bookings.index', compact('bookings'));
     }
 
-    public function showSeatSelection($scheduleId)
+    public function showSeatSelection($id)
     {
-        $schedule = Schedule::with(['bus', 'route'])->findOrFail($scheduleId);
-        $bookedSeats = Booking::where('schedule_id', $scheduleId)
-            ->where('status', 'confirmed')
-            ->pluck('seat_number')
-            ->toArray();
+        try {
+            $schedule = Schedule::with(['bus.standard', 'route'])
+                ->findOrFail($id);
 
-        return view('seatselect', compact('schedule', 'bookedSeats'));
-    }
+            // Calculate arrival time
+            $schedule->arrival_time = Carbon::parse($schedule->departure_time)
+                ->addHours($schedule->duration)
+                ->format('H:i');
 
-    public function showReservation($scheduleId)
-    {
-        if (!session('selected_seats')) {
-            return redirect()->route('booking.seats', $scheduleId)
-                ->with('error', 'Please select seats first');
+            // Load bus features with names
+            $features = [];
+            if ($schedule->bus->features) {
+                // Check if features is already an array
+                $featureIds = is_array($schedule->bus->features) 
+                    ? $schedule->bus->features 
+                    : json_decode($schedule->bus->features, true) ?? [];
+                
+                if (!empty($featureIds)) {
+                    $features = \App\Models\BusFeature::whereIn('id', $featureIds)
+                        ->pluck('name')
+                        ->toArray();
+                }
+            }
+            $schedule->bus->feature_names = $features;
+
+            return view('seatselect', compact('schedule'));
+        } catch (\Exception $e) {
+            Log::error('Error showing seat selection: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Schedule not found');
         }
-
-        $schedule = Schedule::with(['bus', 'route'])->findOrFail($scheduleId);
-        $selectedSeats = session('selected_seats');
-
-        return view('reservation', compact('schedule', 'selectedSeats'));
     }
 
-    public function storeSelectedSeats(Request $request, $scheduleId)
+    public function showReservation($id)
     {
-        $request->validate([
-            'seats' => 'required|array|min:1'
-        ]);
+        try {
+            $schedule = Schedule::with(['bus.standard', 'route'])
+                ->findOrFail($id);
 
-        session(['selected_seats' => $request->seats]);
+            return view('reservation', compact('schedule'));
+        } catch (\Exception $e) {
+            Log::error('Error showing reservation: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Schedule not found');
+        }
+    }
 
-        return response()->json([
-            'success' => true,
-            'redirect' => route('booking.reservation', $scheduleId)
-        ]);
+    public function storeSelectedSeats(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'seats' => 'required|array|min:1'
+            ]);
+
+            // Store selected seats in session
+            session(['selected_seats' => $validated['seats']]);
+
+            return response()->json([
+                'success' => true,
+                'redirect' => route('booking.reservation', $id)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error storing seats: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error storing selected seats'
+            ], 500);
+        }
+    }
+
+    public function completeBooking(Request $request)
+    {
+        // Add booking completion logic here
+        // This will be implemented when we set up the payment system
     }
 
     public function generateTicket($bookingId)
